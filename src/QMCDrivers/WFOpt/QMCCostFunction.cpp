@@ -196,10 +196,10 @@ void QMCCostFunction::getConfigurations(const std::string& aroot)
     if (H_KE_Node[ip] == 0)
     {
       H_KE_Node[ip] = new QMCHamiltonian;
-      H_KE_Node[ip]->addOperator(hClones[ip]->getHamiltonian("Kinetic"), "Kinetic");
+      H_KE_Node[ip]->addOperator(std::unique_ptr<OperatorBase>(hClones[ip]->getHamiltonian("Kinetic")), "Kinetic");
       if (includeNonlocalH != "no")
       {
-        std::unique_ptr<OperatorBase> a = std::make_unique<OperatorBase>(hClones[ip]->getHamiltonian(includeNonlocalH));
+        std::unique_ptr<OperatorBase> a(hClones[ip]->getHamiltonian(includeNonlocalH));
         if (a)
         {
           app_log() << " Found non-local Hamiltonian element named " << includeNonlocalH << std::endl;
