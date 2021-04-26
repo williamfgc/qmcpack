@@ -79,7 +79,7 @@ bool QMCHamiltonian::get(std::ostream& os) const
  * @param aname name of h
  * @param physical if true, a physical operator
  */
-void QMCHamiltonian::addOperator(std::unique_ptr<OperatorBase> h, const std::string& aname, bool physical)
+void QMCHamiltonian::addOperator(std::unique_ptr<OperatorBase>&& h, const std::string& aname, bool physical)
 {
   //change UpdateMode[PHYSICAL] of h so that cloning can be done correctly
   h->UpdateMode[OperatorBase::PHYSICAL] = physical;
