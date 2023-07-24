@@ -558,7 +558,10 @@ protected:
   /// Optimizable variables
   opt_variables_type myVars;
 
-  friend opt_variables_type& testing::getMyVars(SPOSetT<T>& spo);
+  friend opt_variables_type& testing::getMyVars(SPOSetT<float>& spo);
+  friend opt_variables_type& testing::getMyVars(SPOSetT<double>& spo);
+  friend opt_variables_type& testing::getMyVars(SPOSetT<std::complex<float>>& spo);
+  friend opt_variables_type& testing::getMyVars(SPOSetT<std::complex<double>>& spo);
 };
 
 using SPOSetPtr = SPOSet*;
