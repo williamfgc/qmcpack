@@ -33,11 +33,15 @@ namespace qmcplusplus
 {
 class ResourceCollection;
 
-class SPOSet;
+template<class T>
+class SPOSetT;
 namespace testing
 {
-opt_variables_type& getMyVars(SPOSet& spo);
-}
+opt_variables_type& getMyVars(SPOSetT<float>& spo);
+opt_variables_type& getMyVars(SPOSetT<double>& spo);
+opt_variables_type& getMyVars(SPOSetT<std::complex<float>>& spo);
+opt_variables_type& getMyVars(SPOSetT<std::complex<double>>& spo);
+} // namespace testing
 
 
 /** base class for Single-particle orbital sets
@@ -520,11 +524,11 @@ public:
 
   /** acquire a shared resource from collection
    */
-  virtual void acquireResource(ResourceCollection& collection, const RefVectorWithLeader<SPOSet>& spo_list) const {}
+  virtual void acquireResource(ResourceCollection& collection, const RefVectorWithLeader<SPOSetT<T>>& spo_list) const {}
 
   /** return a shared resource to collection
    */
-  virtual void releaseResource(ResourceCollection& collection, const RefVectorWithLeader<SPOSet>& spo_list) const {}
+  virtual void releaseResource(ResourceCollection& collection, const RefVectorWithLeader<SPOSetT<T>>& spo_list) const {}
 
   /** make a clone of itself
    * every derived class must implement this to have threading working correctly.
@@ -564,7 +568,8 @@ protected:
   friend opt_variables_type& testing::getMyVars(SPOSetT<std::complex<double>>& spo);
 };
 
-using SPOSetPtr = SPOSet*;
+template<class T>
+using SPOSetTPtr = SPOSetT<T>*;
 
 } // namespace qmcplusplus
 #endif
