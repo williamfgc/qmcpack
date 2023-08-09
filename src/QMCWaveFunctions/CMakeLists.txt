@@ -41,6 +41,7 @@ set(WFBASE_SRCS
 
 if(NOT QMC_COMPLEX)
   set(WFBASE_SRCS ${WFBASE_SRCS} RotatedSPOs.cpp)
+  set(WFBASE_SRCS ${WFBASE_SRCS} RotatedSPOsT.cpp)
 endif(NOT QMC_COMPLEX)
 
 if(QMC_COMPLEX)
