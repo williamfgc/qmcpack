@@ -44,7 +44,7 @@ if(NOT QMC_COMPLEX)
 endif(NOT QMC_COMPLEX)
 
 if(QMC_COMPLEX)
-  set(WFBASE_SRCS ${WFBASE_SRCS} SpinorSet.cpp)
+  set(WFBASE_SRCS ${WFBASE_SRCS} SpinorSet.cpp SpinorSetT.cpp)
 endif(QMC_COMPLEX)
 ########################
 # build jastrows
