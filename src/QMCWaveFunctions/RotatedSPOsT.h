@@ -27,9 +27,9 @@ opt_variables_type&
 getMyVarsFull(RotatedSPOsT<double>& rot);
 opt_variables_type&
 getMyVarsFull(RotatedSPOsT<float>& rot);
-std::vector<std::vector<QMCTraits::RealType>>&
+std::vector<std::vector<double>>&
 getHistoryParams(RotatedSPOsT<double>& rot);
-std::vector<std::vector<QMCTraits::RealType>>&
+std::vector<std::vector<float>>&
 getHistoryParams(RotatedSPOsT<float>& rot);
 } // namespace testing
 
@@ -37,9 +37,12 @@ template <typename T>
 class RotatedSPOsT : public SPOSetT<T>, public OptimizableObject
 {
 public:
+	static_assert(!IsComplex_t<T>::value,
+		"RotatedSPOsT can only be used with non-complex types");
+
 	using IndexType = typename SPOSetT<T>::IndexType;
 	using RealType = typename SPOSetT<T>::RealType;
-	using QTFull = typename SPOSetT<T>::QTFull;
+	using FullRealType = typename OrbitalSetTraits<double>::RealType;
 	using ValueVector = typename SPOSetT<T>::ValueVector;
 	using ValueMatrix = typename SPOSetT<T>::ValueMatrix;
 	using GradVector = typename SPOSetT<T>::GradVector;
@@ -218,7 +221,7 @@ public:
 
 	void
 	evaluateDerivativesWF(ParticleSet& P, const opt_variables_type& optvars,
-		Vector<T>& dlogpsi, const typename QTFull::ValueType& psiCurrent,
+		Vector<T>& dlogpsi, const FullRealType& psiCurrent,
 		const std::vector<T>& Coeff, const std::vector<size_t>& C2node_up,
 		const std::vector<size_t>& C2node_dn, const ValueVector& detValues_up,
 		const ValueVector& detValues_dn, const ValueMatrix& M_up,
@@ -415,9 +418,9 @@ private:
 	testing::getMyVarsFull(RotatedSPOsT<double>& rot);
 	friend opt_variables_type&
 	testing::getMyVarsFull(RotatedSPOsT<float>& rot);
-	friend std::vector<std::vector<QMCTraits::RealType>>&
+	friend std::vector<std::vector<double>>&
 	testing::getHistoryParams(RotatedSPOsT<double>& rot);
-	friend std::vector<std::vector<QMCTraits::RealType>>&
+	friend std::vector<std::vector<float>>&
 	testing::getHistoryParams(RotatedSPOsT<float>& rot);
 };
 

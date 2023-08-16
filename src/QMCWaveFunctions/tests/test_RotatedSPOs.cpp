@@ -655,11 +655,11 @@ opt_variables_type& getMyVarsFull(RotatedSPOs& rot) { return rot.myVarsFull; }
 opt_variables_type& getMyVarsFull(RotatedSPOsT<double>& rot) { return rot.myVarsFull; }
 opt_variables_type& getMyVarsFull(RotatedSPOsT<float>& rot) { return rot.myVarsFull; }
 std::vector<std::vector<QMCTraits::RealType>>& getHistoryParams(RotatedSPOs& rot) { return rot.history_params_; }
-std::vector<std::vector<QMCTraits::RealType>>& getHistoryParams(RotatedSPOsT<double>& rot)
+std::vector<std::vector<double>>& getHistoryParams(RotatedSPOsT<double>& rot)
 {
   return rot.history_params_;
 }
-std::vector<std::vector<QMCTraits::RealType>>& getHistoryParams(RotatedSPOsT<float>& rot)
+std::vector<std::vector<float>>& getHistoryParams(RotatedSPOsT<float>& rot)
 {
   return rot.history_params_;
 }

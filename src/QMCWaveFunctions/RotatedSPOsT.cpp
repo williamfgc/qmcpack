@@ -978,7 +978,7 @@ template <typename T>
 void
 RotatedSPOsT<T>::evaluateDerivativesWF(ParticleSet& P,
 	const opt_variables_type& optvars, Vector<T>& dlogpsi,
-	const typename QTFull::ValueType& psiCurrent, const std::vector<T>& Coeff,
+	const FullRealType& psiCurrent, const std::vector<T>& Coeff,
 	const std::vector<size_t>& C2node_up, const std::vector<size_t>& C2node_dn,
 	const ValueVector& detValues_up, const ValueVector& detValues_dn,
 	const ValueMatrix& M_up, const ValueMatrix& M_dn,
