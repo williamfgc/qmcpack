@@ -34,6 +34,7 @@ set(WFBASE_SRCS
     SPOSet.cpp
     SPOSetT.cpp
     CompositeSPOSet.cpp
+    RotatedSPOsT.cpp
     HarmonicOscillator/SHOSet.cpp
     HarmonicOscillator/SHOSetBuilder.cpp
     ExampleHeBuilder.cpp
