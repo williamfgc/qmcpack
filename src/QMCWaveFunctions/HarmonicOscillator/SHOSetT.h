@@ -16,7 +16,6 @@
 
 #include "QMCWaveFunctions/SPOSetT.h"
 #include "QMCWaveFunctions/SPOInfo.h"
-#include "type_traits/complex_help.hpp"
 
 namespace qmcplusplus
 {
@@ -44,18 +43,18 @@ struct SHOState : public SPOInfo
   }
 };
 
-template <typename T>
+template<typename T>
 class SHOSetT : public SPOSetT<T>
 {
 public:
-  using GradVector = typename SPOSetT<T>::GradVector;
+  using GradVector  = typename SPOSetT<T>::GradVector;
   using ValueVector = typename SPOSetT<T>::ValueVector;
   using ValueMatrix = typename SPOSetT<T>::ValueMatrix;
   using GradMatrix  = typename SPOSetT<T>::GradMatrix;
-  using value_type = typename ValueMatrix::value_type;
-  using grad_type  = typename GradMatrix::value_type;
-  using RealType = typename RealAlias_impl<T>::value_type;
-  using PosType = TinyVector<RealType, QMCTraits::DIM>;
+  using value_type  = typename ValueMatrix::value_type;
+  using grad_type   = typename GradMatrix::value_type;
+  using RealType    = typename SPOSetT<T>::RealType;
+  using PosType     = TinyVector<RealType, QMCTraits::DIM>;
   using HessType    = typename OrbitalSetTraits<T>::HessType;
   using HessMatrix  = typename OrbitalSetTraits<T>::HessMatrix;
   using GGGType     = TinyVector<HessType, OHMMS_DIM>;

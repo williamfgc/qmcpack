@@ -15,7 +15,6 @@
 
 #include "QMCWaveFunctions/SPOSetT.h"
 #include "ResourceHandle.h"
-#include "type_traits/complex_help.hpp"
 
 namespace qmcplusplus
 {
@@ -35,7 +34,7 @@ public:
   //using OffloadMWVGLArray = typename SPOSetT<T>::template OffloadMWCGLArray;
   template<typename DT>
   using OffloadMatrix = typename SPOSetT<T>::template OffloadMatrix<DT>;
-  using RealType      = typename RealAlias_impl<T>::value_type;
+  using RealType      = typename SPOSetT<T>::RealType;
   using IndexType     = OHMMS_INDEXTYPE;
 
   /** constructor */
