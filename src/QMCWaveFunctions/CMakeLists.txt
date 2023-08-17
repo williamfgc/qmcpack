@@ -114,7 +114,7 @@ if(OHMMS_DIM MATCHES 3)
   if(QMC_COMPLEX)
     set(FERMION_SRCS ${FERMION_SRCS} PlaneWave/PWOrbitalSet.cpp)
   else()
-    set(FERMION_SRCS ${FERMION_SRCS} PlaneWave/PWRealOrbitalSet.cpp)
+    set(FERMION_SRCS ${FERMION_SRCS} PlaneWave/PWRealOrbitalSet.cpp PlaneWave/PWRealOrbitalSetT.cpp)
   endif(QMC_COMPLEX)
 
   if(NOT QMC_COMPLEX)
