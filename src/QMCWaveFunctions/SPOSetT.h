@@ -68,6 +68,7 @@ public:
   using PosType           = typename OrbitalSetTraits<T>::PosType;
   using RealType          = typename OrbitalSetTraits<T>::RealType;
   using ValueType         = typename OrbitalSetTraits<T>::ValueType;
+  using FullRealType      = typename OrbitalSetTraits<double>::RealType;
   template<typename DT>
   using OffloadMatrix = Matrix<DT, OffloadPinnedAllocator<DT>>;
 

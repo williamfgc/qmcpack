@@ -34,14 +34,13 @@ set(WFBASE_SRCS
     SPOSet.cpp
     SPOSetT.cpp
     CompositeSPOSet.cpp
-    RotatedSPOsT.cpp
     HarmonicOscillator/SHOSet.cpp
     HarmonicOscillator/SHOSetBuilder.cpp
     ExampleHeBuilder.cpp
     ExampleHeComponent.cpp)
 
 if(NOT QMC_COMPLEX)
-  set(WFBASE_SRCS ${WFBASE_SRCS} RotatedSPOs.cpp)
+  set(WFBASE_SRCS ${WFBASE_SRCS} RotatedSPOs.cpp RotatedSPOsT.cpp)
 endif(NOT QMC_COMPLEX)
 
 if(QMC_COMPLEX)
