@@ -286,13 +286,13 @@ public:
 
   void evaluateValue(const ParticleSet& P, int iat, ValueVector& psi) override
   {
-    assert(psi.size() <= OrbitalSetSize);
+    assert(psi.size() <= this->OrbitalSetSize);
     Phi->evaluateValue(P, iat, psi);
   }
 
   void evaluateVGL(const ParticleSet& P, int iat, ValueVector& psi, GradVector& dpsi, ValueVector& d2psi) override
   {
-    assert(psi.size() <= OrbitalSetSize);
+    assert(psi.size() <= this->OrbitalSetSize);
     Phi->evaluateVGL(P, iat, psi, dpsi, d2psi);
   }
 
@@ -319,7 +319,7 @@ public:
                    GradVector& dpsi,
                    HessVector& grad_grad_psi) override
   {
-    assert(psi.size() <= OrbitalSetSize);
+    assert(psi.size() <= this->OrbitalSetSize);
     Phi->evaluateVGH(P, iat, psi, dpsi, grad_grad_psi);
   }
 
