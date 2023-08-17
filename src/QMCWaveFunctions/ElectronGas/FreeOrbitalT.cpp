@@ -20,6 +20,46 @@
 namespace qmcplusplus
 {
 
+template<class T>
+FreeOrbitalT<T>::~FreeOrbitalT()
+{}
+
+template<class T>
+void FreeOrbitalT<T>::evaluate_notranspose(const ParticleSet& P,
+                                           int first,
+                                           int last,
+                                           ValueMatrix& phi,
+                                           GradMatrix& dphi,
+                                           ValueMatrix& d2phi)
+{
+  for (int iat = first, i = 0; iat < last; iat++, i++)
+  {
+    ValueVector p(phi[i], this->OrbitalSetSize);
+    GradVector dp(dphi[i], this->OrbitalSetSize);
+    ValueVector d2p(d2phi[i], this->OrbitalSetSize);
+    evaluateVGL(P, iat, p, dp, d2p);
+  }
+}
+
+template<class T>
+void FreeOrbitalT<T>::report(const std::string& pad) const
+{
+  app_log() << pad << "FreeOrbital report" << std::endl;
+  for (int ik = 0; ik < kvecs.size(); ik++)
+  {
+    app_log() << pad << ik << " " << kvecs[ik] << std::endl;
+  }
+  app_log() << pad << "end FreeOrbital report" << std::endl;
+  app_log().flush();
+}
+
+template class FreeOrbitalT<float>;
+template class FreeOrbitalT<double>;
+template class FreeOrbitalT<std::complex<float>>;
+template class FreeOrbitalT<std::complex<double>>;
+
+//Explicit specialization
+
 //Constructors need to be fully specialized
 template<>
 FreeOrbitalT<float>::FreeOrbitalT(const std::string& my_name, const std::vector<PosType>& kpts_cart)
@@ -73,10 +113,6 @@ FreeOrbitalT<std::complex<double>>::FreeOrbitalT(const std::string& my_name, con
     k2neg[ik] = -dot(kvecs[ik], kvecs[ik]);
 }
 
-
-template<class T>
-FreeOrbitalT<T>::~FreeOrbitalT()
-{}
 
 template<>
 void FreeOrbitalT<float>::evaluateVGL(const ParticleSet& P,
@@ -236,22 +272,6 @@ void FreeOrbitalT<std::complex<double>>::evaluateValue(const ParticleSet& P, int
   }
 }
 
-template<class T>
-void FreeOrbitalT<T>::evaluate_notranspose(const ParticleSet& P,
-                                           int first,
-                                           int last,
-                                           ValueMatrix& phi,
-                                           GradMatrix& dphi,
-                                           ValueMatrix& d2phi)
-{
-  for (int iat = first, i = 0; iat < last; iat++, i++)
-  {
-    ValueVector p(phi[i], this->OrbitalSetSize);
-    GradVector dp(dphi[i], this->OrbitalSetSize);
-    ValueVector d2p(d2phi[i], this->OrbitalSetSize);
-    evaluateVGL(P, iat, p, dp, d2p);
-  }
-}
 
 template<>
 void FreeOrbitalT<float>::evaluate_notranspose(const ParticleSet& P,
@@ -661,23 +681,6 @@ void FreeOrbitalT<std::complex<double>>::evaluate_notranspose(const ParticleSet&
     }
   }
 }
-
-template<class T>
-void FreeOrbitalT<T>::report(const std::string& pad) const
-{
-  app_log() << pad << "FreeOrbital report" << std::endl;
-  for (int ik = 0; ik < kvecs.size(); ik++)
-  {
-    app_log() << pad << ik << " " << kvecs[ik] << std::endl;
-  }
-  app_log() << pad << "end FreeOrbital report" << std::endl;
-  app_log().flush();
-}
-
-template class FreeOrbitalT<float>;
-template class FreeOrbitalT<double>;
-template class FreeOrbitalT<std::complex<float>>;
-template class FreeOrbitalT<std::complex<double>>;
 
 
 } // namespace qmcplusplus
