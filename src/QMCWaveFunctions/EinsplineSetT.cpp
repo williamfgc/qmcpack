@@ -27,31 +27,30 @@
 
 namespace qmcplusplus
 {
-template <typename T>
-EinsplineSetT<T>::EinsplineSetT(const std::string& my_name) :
-	SPOSet(my_name),
-	TwistNum(0),
-	NumValenceOrbs(0)
+template<typename T>
+EinsplineSetT<T>::EinsplineSetT(const std::string& my_name) : SPOSetT<T>(my_name), TwistNum(0), NumValenceOrbs(0)
+{}
+
+template<typename T>
+typename EinsplineSetT<T>::UnitCellType EinsplineSetT<T>::GetLattice()
 {
+  return SuperLattice;
 }
 
-template <typename T>
-typename EinsplineSetT<T>::UnitCellType
-EinsplineSetT<T>::GetLattice()
+template<typename T>
+void EinsplineSetT<T>::resetSourceParticleSet(ParticleSet& ions)
+{}
+
+template<typename T>
+void EinsplineSetT<T>::setOrbitalSetSize(int norbs)
 {
-	return SuperLattice;
+  this->OrbitalSetSize = norbs;
 }
 
-template <typename T>
-void
-EinsplineSetT<T>::resetSourceParticleSet(ParticleSet& ions)
-{
-}
+// Class concrete types from ValueType
+template class EinsplineSetT<double>;
+template class EinsplineSetT<float>;
+template class EinsplineSetT<std::complex<double>>;
+template class EinsplineSetT<std::complex<float>>;
 
-template <typename T>
-void
-EinsplineSetT<T>::setOrbitalSetSize(int norbs)
-{
-	this->OrbitalSetSize = norbs;
-}
 } // namespace qmcplusplus
