@@ -23,7 +23,12 @@ namespace qmcplusplus
 {
 template<typename T>
 RotatedSPOsT<T>::RotatedSPOsT(const std::string& my_name, std::unique_ptr<SPOSetT<T>>&& spos)
-    : SPOSetT<T>(my_name), OptimizableObject(my_name), Phi(std::move(spos)), nel_major_(0), params_supplied(false)
+    : SPOSetT<T>(my_name),
+      OptimizableObject(my_name),
+      Phi(std::move(spos)),
+      nel_major_(0),
+      params_supplied(false),
+      apply_rotation_timer_(createGlobalTimer("RotatedSPOsT::apply_rotation", timer_level_fine))
 {
   this->OrbitalSetSize = Phi->getOrbitalSetSize();
 }
@@ -425,7 +430,10 @@ void RotatedSPOsT<T>::apply_rotation(const std::vector<RealType>& param, bool us
 	  Finally, apply unitary matrix to orbs.
 	*/
   exponentiate_antisym_matrix(rot_mat);
-  Phi->applyRotation(rot_mat, use_stored_copy);
+  {
+    ScopedTimer local(apply_rotation_timer_);
+    Phi->applyRotation(rot_mat, use_stored_copy);
+  }
 }
 
 template<typename T>
@@ -437,7 +445,10 @@ void RotatedSPOsT<T>::applyDeltaRotation(const std::vector<RealType>& delta_para
   ValueMatrix new_rot_mat(nmo, nmo);
   constructDeltaRotation(delta_param, old_param, m_act_rot_inds, m_full_rot_inds, new_param, new_rot_mat);
 
-  Phi->applyRotation(new_rot_mat, true);
+  {
+    ScopedTimer local(apply_rotation_timer_);
+    Phi->applyRotation(new_rot_mat, true);
+  }
 }
 
 template<typename T>
