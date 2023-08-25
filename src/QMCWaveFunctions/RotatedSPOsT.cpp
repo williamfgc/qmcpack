@@ -23,7 +23,12 @@ namespace qmcplusplus
 {
 template<typename T>
 RotatedSPOsT<T>::RotatedSPOsT(const std::string& my_name, std::unique_ptr<SPOSetT<T>>&& spos)
-    : SPOSetT<T>(my_name), OptimizableObject(my_name), Phi(std::move(spos)), nel_major_(0), params_supplied(false)
+    : SPOSetT<T>(my_name),
+      OptimizableObject(my_name),
+      Phi(std::move(spos)),
+      nel_major_(0),
+      params_supplied(false),
+      apply_rotation_timer_(createGlobalTimer("RotatedSPOsT::apply_rotation", timer_level_fine))
 {
   this->OrbitalSetSize = Phi->getOrbitalSetSize();
 }
@@ -425,7 +430,10 @@ void RotatedSPOsT<T>::apply_rotation(const std::vector<RealType>& param, bool us
 	  Finally, apply unitary matrix to orbs.
 	*/
   exponentiate_antisym_matrix(rot_mat);
-  Phi->applyRotation(rot_mat, use_stored_copy);
+  {
+    ScopedTimer local(apply_rotation_timer_);
+    Phi->applyRotation(rot_mat, use_stored_copy);
+  }
 }
 
 template<typename T>
@@ -437,7 +445,10 @@ void RotatedSPOsT<T>::applyDeltaRotation(const std::vector<RealType>& delta_para
   ValueMatrix new_rot_mat(nmo, nmo);
   constructDeltaRotation(delta_param, old_param, m_act_rot_inds, m_full_rot_inds, new_param, new_rot_mat);
 
-  Phi->applyRotation(new_rot_mat, true);
+  {
+    ScopedTimer local(apply_rotation_timer_);
+    Phi->applyRotation(new_rot_mat, true);
+  }
 }
 
 template<typename T>
@@ -1681,6 +1692,139 @@ std::unique_ptr<SPOSetT<T>> RotatedSPOsT<T>::makeClone() const
   myclone->history_params_ = this->history_params_;
   myclone->use_global_rot_ = this->use_global_rot_;
   return myclone;
+}
+
+template<typename T>
+void RotatedSPOsT<T>::mw_evaluateDetRatios(const RefVectorWithLeader<SPOSetT<T>>& spo_list,
+                                           const RefVectorWithLeader<const VirtualParticleSet>& vp_list,
+                                           const RefVector<ValueVector>& psi_list,
+                                           const std::vector<const T*>& invRow_ptr_list,
+                                           std::vector<std::vector<T>>& ratios_list) const
+{
+  auto phi_list = extractPhiRefList(spo_list);
+  auto& leader  = phi_list.getLeader();
+  leader.mw_evaluateDetRatios(phi_list, vp_list, psi_list, invRow_ptr_list, ratios_list);
+}
+
+template<typename T>
+void RotatedSPOsT<T>::mw_evaluateValue(const RefVectorWithLeader<SPOSetT<T>>& spo_list,
+                                       const RefVectorWithLeader<ParticleSet>& P_list,
+                                       int iat,
+                                       const RefVector<ValueVector>& psi_v_list) const
+{
+  auto phi_list = extractPhiRefList(spo_list);
+  auto& leader  = phi_list.getLeader();
+  leader.mw_evaluateValue(phi_list, P_list, iat, psi_v_list);
+}
+
+template<typename T>
+void RotatedSPOsT<T>::mw_evaluateVGL(const RefVectorWithLeader<SPOSetT<T>>& spo_list,
+                                     const RefVectorWithLeader<ParticleSet>& P_list,
+                                     int iat,
+                                     const RefVector<ValueVector>& psi_v_list,
+                                     const RefVector<GradVector>& dpsi_v_list,
+                                     const RefVector<ValueVector>& d2psi_v_list) const
+{
+  auto phi_list = extractPhiRefList(spo_list);
+  auto& leader  = phi_list.getLeader();
+  leader.mw_evaluateVGL(phi_list, P_list, iat, psi_v_list, dpsi_v_list, d2psi_v_list);
+}
+
+template<typename T>
+void RotatedSPOsT<T>::mw_evaluateVGLWithSpin(const RefVectorWithLeader<SPOSetT<T>>& spo_list,
+                                             const RefVectorWithLeader<ParticleSet>& P_list,
+                                             int iat,
+                                             const RefVector<ValueVector>& psi_v_list,
+                                             const RefVector<GradVector>& dpsi_v_list,
+                                             const RefVector<ValueVector>& d2psi_v_list,
+                                             OffloadMatrix<QMCTraits::ComplexType>& mw_dspin) const
+{
+  auto phi_list = extractPhiRefList(spo_list);
+  auto& leader  = phi_list.getLeader();
+  leader.mw_evaluateVGLWithSpin(phi_list, P_list, iat, psi_v_list, dpsi_v_list, d2psi_v_list, mw_dspin);
+}
+
+template<typename T>
+void RotatedSPOsT<T>::mw_evaluateVGLandDetRatioGrads(const RefVectorWithLeader<SPOSetT<T>>& spo_list,
+                                                     const RefVectorWithLeader<ParticleSet>& P_list,
+                                                     int iat,
+                                                     const std::vector<const T*>& invRow_ptr_list,
+                                                     OffloadMWVGLArray& phi_vgl_v,
+                                                     std::vector<T>& ratios,
+                                                     std::vector<GradType>& grads) const
+{
+  auto phi_list = extractPhiRefList(spo_list);
+  auto& leader  = phi_list.getLeader();
+  leader.mw_evaluateVGLandDetRatioGrads(phi_list, P_list, iat, invRow_ptr_list, phi_vgl_v, ratios, grads);
+}
+
+template<typename T>
+void RotatedSPOsT<T>::mw_evaluateVGLandDetRatioGradsWithSpin(const RefVectorWithLeader<SPOSetT<T>>& spo_list,
+                                                             const RefVectorWithLeader<ParticleSet>& P_list,
+                                                             int iat,
+                                                             const std::vector<const T*>& invRow_ptr_list,
+                                                             OffloadMWVGLArray& phi_vgl_v,
+                                                             std::vector<T>& ratios,
+                                                             std::vector<GradType>& grads,
+                                                             std::vector<T>& spingrads) const
+{
+  auto phi_list = extractPhiRefList(spo_list);
+  auto& leader  = phi_list.getLeader();
+  leader.mw_evaluateVGLandDetRatioGradsWithSpin(phi_list, P_list, iat, invRow_ptr_list, phi_vgl_v, ratios, grads,
+                                                spingrads);
+}
+
+template<typename T>
+void RotatedSPOsT<T>::mw_evaluate_notranspose(const RefVectorWithLeader<SPOSetT<T>>& spo_list,
+                                              const RefVectorWithLeader<ParticleSet>& P_list,
+                                              int first,
+                                              int last,
+                                              const RefVector<ValueMatrix>& logdet_list,
+                                              const RefVector<GradMatrix>& dlogdet_list,
+                                              const RefVector<ValueMatrix>& d2logdet_list) const
+{
+  auto phi_list = extractPhiRefList(spo_list);
+  auto& leader  = phi_list.getLeader();
+  leader.mw_evaluate_notranspose(phi_list, P_list, first, last, logdet_list, dlogdet_list, d2logdet_list);
+}
+
+template<typename T>
+void RotatedSPOsT<T>::createResource(ResourceCollection& collection) const
+{
+  Phi->createResource(collection);
+}
+
+template<typename T>
+void RotatedSPOsT<T>::acquireResource(ResourceCollection& collection,
+                                      const RefVectorWithLeader<SPOSetT<T>>& spo_list) const
+{
+  auto phi_list = extractPhiRefList(spo_list);
+  auto& leader  = phi_list.getLeader();
+  leader.acquireResource(collection, phi_list);
+}
+
+template<typename T>
+void RotatedSPOsT<T>::releaseResource(ResourceCollection& collection,
+                                      const RefVectorWithLeader<SPOSetT<T>>& spo_list) const
+{
+  auto phi_list = extractPhiRefList(spo_list);
+  auto& leader  = phi_list.getLeader();
+  leader.releaseResource(collection, phi_list);
+}
+
+template<typename T>
+RefVectorWithLeader<SPOSetT<T>> RotatedSPOsT<T>::extractPhiRefList(const RefVectorWithLeader<SPOSetT<T>>& spo_list)
+{
+  auto& spo_leader = spo_list.template getCastedLeader<RotatedSPOsT<T>>();
+  const auto nw    = spo_list.size();
+  RefVectorWithLeader<SPOSetT<T>> phi_list(*spo_leader.Phi);
+  phi_list.reserve(nw);
+  for (int iw = 0; iw < nw; iw++)
+  {
+    RotatedSPOsT<T>& rot = spo_list.template getCastedElement<RotatedSPOsT<T>>(iw);
+    phi_list.emplace_back(*rot.Phi);
+  }
+  return phi_list;
 }
 
 // Class concrete types from ValueType
