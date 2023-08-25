@@ -33,17 +33,22 @@ template<class T>
 class RotatedSPOsT : public SPOSetT<T>, public OptimizableObject
 {
 public:
-  using IndexType    = typename SPOSetT<T>::IndexType;
-  using RealType     = typename SPOSetT<T>::RealType;
-  using FullRealType = typename SPOSetT<T>::FullRealType;
-  using ValueVector  = typename SPOSetT<T>::ValueVector;
-  using ValueMatrix  = typename SPOSetT<T>::ValueMatrix;
-  using GradVector   = typename SPOSetT<T>::GradVector;
-  using GradMatrix   = typename SPOSetT<T>::GradMatrix;
-  using HessVector   = typename SPOSetT<T>::HessVector;
-  using HessMatrix   = typename SPOSetT<T>::HessMatrix;
-  using GGGVector    = typename SPOSetT<T>::GGGVector;
-  using GGGMatrix    = typename SPOSetT<T>::GGGMatrix;
+  using IndexType         = typename SPOSetT<T>::IndexType;
+  using RealType          = typename SPOSetT<T>::RealType;
+  using FullRealType      = typename SPOSetT<T>::FullRealType;
+  using ValueVector       = typename SPOSetT<T>::ValueVector;
+  using ValueMatrix       = typename SPOSetT<T>::ValueMatrix;
+  using GradVector        = typename SPOSetT<T>::GradVector;
+  using GradMatrix        = typename SPOSetT<T>::GradMatrix;
+  using GradType          = typename SPOSetT<T>::GradType;
+  using HessVector        = typename SPOSetT<T>::HessVector;
+  using HessMatrix        = typename SPOSetT<T>::HessMatrix;
+  using GGGVector         = typename SPOSetT<T>::GGGVector;
+  using GGGMatrix         = typename SPOSetT<T>::GGGMatrix;
+  using OffloadMWVGLArray = typename SPOSetT<T>::OffloadMWVGLArray;
+  using OffloadMWVArray   = typename SPOSetT<T>::OffloadMWVArray;
+  template<typename DT>
+  using OffloadMatrix = typename SPOSetT<T>::template OffloadMatrix<DT>;
 
   // constructor
   RotatedSPOsT(const std::string& my_name, std::unique_ptr<SPOSetT<T>>&& spos);
@@ -392,6 +397,63 @@ public:
 
   /// Use history list (false) or global rotation (true)
   void set_use_global_rotation(bool use_global_rotation) { use_global_rot_ = use_global_rotation; }
+
+  void mw_evaluateDetRatios(const RefVectorWithLeader<SPOSetT<T>>& spo_list,
+                            const RefVectorWithLeader<const VirtualParticleSet>& vp_list,
+                            const RefVector<ValueVector>& psi_list,
+                            const std::vector<const T*>& invRow_ptr_list,
+                            std::vector<std::vector<T>>& ratios_list) const override;
+
+  void mw_evaluateValue(const RefVectorWithLeader<SPOSetT<T>>& spo_list,
+                        const RefVectorWithLeader<ParticleSet>& P_list,
+                        int iat,
+                        const RefVector<ValueVector>& psi_v_list) const override;
+
+  void mw_evaluateVGL(const RefVectorWithLeader<SPOSetT<T>>& spo_list,
+                      const RefVectorWithLeader<ParticleSet>& P_list,
+                      int iat,
+                      const RefVector<ValueVector>& psi_v_list,
+                      const RefVector<GradVector>& dpsi_v_list,
+                      const RefVector<ValueVector>& d2psi_v_list) const override;
+
+  void mw_evaluateVGLWithSpin(const RefVectorWithLeader<SPOSetT<T>>& spo_list,
+                              const RefVectorWithLeader<ParticleSet>& P_list,
+                              int iat,
+                              const RefVector<ValueVector>& psi_v_list,
+                              const RefVector<GradVector>& dpsi_v_list,
+                              const RefVector<ValueVector>& d2psi_v_list,
+                              OffloadMatrix<QMCTraits::ComplexType>& mw_dspin) const override;
+
+  void mw_evaluateVGLandDetRatioGrads(const RefVectorWithLeader<SPOSetT<T>>& spo_list,
+                                      const RefVectorWithLeader<ParticleSet>& P_list,
+                                      int iat,
+                                      const std::vector<const T*>& invRow_ptr_list,
+                                      OffloadMWVGLArray& phi_vgl_v,
+                                      std::vector<T>& ratios,
+                                      std::vector<GradType>& grads) const override;
+
+  void mw_evaluateVGLandDetRatioGradsWithSpin(const RefVectorWithLeader<SPOSetT<T>>& spo_list,
+                                              const RefVectorWithLeader<ParticleSet>& P_list,
+                                              int iat,
+                                              const std::vector<const T*>& invRow_ptr_list,
+                                              OffloadMWVGLArray& phi_vgl_v,
+                                              std::vector<T>& ratios,
+                                              std::vector<GradType>& grads,
+                                              std::vector<T>& spingrads) const override;
+
+  void mw_evaluate_notranspose(const RefVectorWithLeader<SPOSetT<T>>& spo_list,
+                               const RefVectorWithLeader<ParticleSet>& P_list,
+                               int first,
+                               int last,
+                               const RefVector<ValueMatrix>& logdet_list,
+                               const RefVector<GradMatrix>& dlogdet_list,
+                               const RefVector<ValueMatrix>& d2logdet_list) const override;
+
+  void createResource(ResourceCollection& collection) const override;
+
+  void acquireResource(ResourceCollection& collection, const RefVectorWithLeader<SPOSetT<T>>& spo_list) const override;
+
+  void releaseResource(ResourceCollection& collection, const RefVectorWithLeader<SPOSetT<T>>& spo_list) const override;
 
 private:
   /// true if SPO parameters (orbital rotation parameters) have been supplied
