@@ -1683,6 +1683,21 @@ std::unique_ptr<SPOSetT<T>> RotatedSPOsT<T>::makeClone() const
   return myclone;
 }
 
+template<typename T>
+RefVectorWithLeader<SPOSetT<T>> RotatedSPOsT<T>::extractPhiRefList(const RefVectorWithLeader<SPOSetT<T>>& spo_list)
+{
+  auto& spo_leader = spo_list.template getCastedLeader<RotatedSPOsT<T>>();
+  const auto nw    = spo_list.size();
+  RefVectorWithLeader<SPOSetT<T>> phi_list(*spo_leader.Phi);
+  phi_list.reserve(nw);
+  for (int iw = 0; iw < nw; iw++)
+  {
+    RotatedSPOsT<T>& rot = spo_list.template getCastedElement<RotatedSPOsT<T>>(iw);
+    phi_list.emplace_back(*rot.Phi);
+  }
+  return phi_list;
+}
+
 // Class concrete types from ValueType
 template class RotatedSPOsT<double>;
 template class RotatedSPOsT<float>;
