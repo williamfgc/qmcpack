@@ -33,6 +33,9 @@ template<class T>
 class RotatedSPOsT : public SPOSetT<T>, public OptimizableObject
 {
 public:
+  static_assert(!IsComplex_t<T>::value,
+        "RotatedSPOsT cannot be used with complex template argument");
+
   using IndexType    = typename SPOSetT<T>::IndexType;
   using RealType     = typename SPOSetT<T>::RealType;
   using FullRealType = typename SPOSetT<T>::FullRealType;
