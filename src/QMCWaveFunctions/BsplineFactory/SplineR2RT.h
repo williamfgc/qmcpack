@@ -41,15 +41,18 @@ public:
   using SingleSplineType = UBspline_3d_d;
   // types for evaluation results
   using TT = typename BsplineSetT<ST>::ValueType;
-  using BsplineSetT<ST>::GGGVector;
-  using BsplineSetT<ST>::GradVector;
-  using BsplineSetT<ST>::HessVector;
-  using BsplineSetT<ST>::ValueVector;
+  using GGGVector = typename BsplineSetT<ST>::GGGVector;
+  using ValueMatrix = typename BsplineSetT<ST>::ValueMatrix;
+  using GradVector = typename BsplineSetT<ST>::GradVector;
+  using HessVector = typename BsplineSetT<ST>::HessVector;
+  using ValueVector = typename BsplineSetT<ST>::ValueVector;
 
   using vContainer_type  = Vector<ST, aligned_allocator<ST>>;
   using gContainer_type  = VectorSoaContainer<ST, 3>;
   using hContainer_type  = VectorSoaContainer<ST, 6>;
   using ghContainer_type = VectorSoaContainer<ST, 10>;
+
+  using RealType  = typename SPOSetT<ST>::RealType;
 
 private:
   bool IsGamma;
@@ -106,15 +109,15 @@ public:
 
   inline void resizeStorage(size_t n, size_t nvals)
   {
-    init_base(n);
+    this->init_base(n);
     const size_t npad = getAlignedSize<ST>(n);
-    myV.resize(npad);
-    myG.resize(npad);
-    myL.resize(npad);
-    myH.resize(npad);
-    mygH.resize(npad);
+    this->myV.resize(npad);
+    this->myG.resize(npad);
+    this->myL.resize(npad);
+    this->myH.resize(npad);
+    this->mygH.resize(npad);
 
-    IsGamma = ((HalfG[0] == 0) && (HalfG[1] == 0) && (HalfG[2] == 0));
+    IsGamma = ((this->HalfG[0] == 0) && (this->HalfG[1] == 0) && (this->HalfG[2] == 0));
   }
 
   void bcast_tables(Communicate* comm) { chunked_bcast(comm, SplineInst->getSplinePtr()); }
@@ -123,11 +126,11 @@ public:
   {
     if (comm->size() == 1)
       return;
-    const int Nbands      = kPoints.size();
+    const int Nbands      = this->kPoints.size();
     const int Nbandgroups = comm->size();
-    offset.resize(Nbandgroups + 1, 0);
-    FairDivideLow(Nbands, Nbandgroups, offset);
-    gatherv(comm, SplineInst->getSplinePtr(), SplineInst->getSplinePtr()->z_stride, offset);
+    this->offset.resize(Nbandgroups + 1, 0);
+    FairDivideLow(Nbands, Nbandgroups, this->offset);
+    gatherv(comm, SplineInst->getSplinePtr(), SplineInst->getSplinePtr()->z_stride, this->offset);
   }
 
   template<typename GT, typename BCT>
@@ -154,14 +157,14 @@ public:
   {
     ru          = PrimLattice.toUnit(r);
     int bc_sign = 0;
-    for (int i = 0; i < D; i++)
+    for (int i = 0; i < this->D; i++)
       if (-std::numeric_limits<ST>::epsilon() < ru[i] && ru[i] < 0)
         ru[i] = ST(0.0);
       else
       {
         ST img = std::floor(ru[i]);
         ru[i] -= img;
-        bc_sign += HalfG[i] * (int)img;
+        bc_sign += this->HalfG[i] * (int)img;
       }
     return bc_sign;
   }

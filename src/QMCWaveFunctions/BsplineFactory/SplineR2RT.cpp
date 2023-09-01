@@ -37,7 +37,7 @@ template<typename ST>
 bool SplineR2RT<ST>::read_splines(hdf_archive& h5f)
 {
   std::ostringstream o;
-  o << "spline_" << MyIndex;
+  o << "spline_" << this->MyIndex;
   einspline_engine<SplineType> bigtable(SplineInst->getSplinePtr());
   return h5f.readEntry(bigtable, o.str().c_str()); //"spline_0");
 }
@@ -46,7 +46,7 @@ template<typename ST>
 bool SplineR2RT<ST>::write_splines(hdf_archive& h5f)
 {
   std::ostringstream o;
-  o << "spline_" << MyIndex;
+  o << "spline_" << this->MyIndex;
   einspline_engine<SplineType> bigtable(SplineInst->getSplinePtr());
   return h5f.writeEntry(bigtable, o.str().c_str()); //"spline_0");
 }
@@ -123,11 +123,11 @@ void SplineR2RT<ST>::applyRotation(const ValueMatrix& rot_mat, bool use_stored_c
   // Apply rotation the dumb way b/c I can't get BLAS::gemm to work...
   for (auto i = 0; i < BasisSetSize; i++)
   {
-    for (auto j = 0; j < OrbitalSetSize; j++)
+    for (auto j = 0; j < this->OrbitalSetSize; j++)
     {
       const auto cur_elem = Nsplines * i + j;
       auto newval{0.};
-      for (auto k = 0; k < OrbitalSetSize; k++)
+      for (auto k = 0; k < this->OrbitalSetSize; k++)
       {
         const auto index = i * Nsplines + k;
         newval += (*coef_copy_)[index] * rot_mat[k][j];
@@ -143,12 +143,12 @@ inline void SplineR2RT<ST>::assign_v(int bc_sign, const vContainer_type& myV, Va
     const
 {
   // protect last
-  last = last > kPoints.size() ? kPoints.size() : last;
+  last = last > this->kPoints.size() ? this->kPoints.size() : last;
 
   const ST signed_one = (bc_sign & 1) ? -1 : 1;
 #pragma omp simd
   for (size_t j = first; j < last; ++j)
-    psi[first_spo + j] = signed_one * myV[j];
+    psi[this->first_spo + j] = signed_one * myV[j];
 }
 
 template<typename ST>
@@ -188,7 +188,7 @@ void SplineR2RT<ST>::evaluateDetRatios(const VirtualParticleSet& VP,
     }
     int first, last;
     FairDivideAligned(psi.size(), getAlignment<ST>(), omp_get_num_threads(), tid, first, last);
-    const int last_real = kPoints.size() < last ? kPoints.size() : last;
+    const int last_real = this->kPoints.size() < last ? this->kPoints.size() : last;
 
     for (int iat = 0; iat < VP.getTotalNum(); ++iat)
     {
@@ -220,7 +220,7 @@ inline void SplineR2RT<ST>::assign_vgl(int bc_sign,
                                       int last) const
 {
   // protect last
-  last = last > kPoints.size() ? kPoints.size() : last;
+  last = last > this->kPoints.size() ? this->kPoints.size() : last;
 
   const ST signed_one = (bc_sign & 1) ? -1 : 1;
   const ST g00 = PrimLattice.G(0), g01 = PrimLattice.G(1), g02 = PrimLattice.G(2), g10 = PrimLattice.G(3),
@@ -241,7 +241,7 @@ inline void SplineR2RT<ST>::assign_vgl(int bc_sign,
 #pragma omp simd
   for (size_t j = first; j < last; ++j)
   {
-    const size_t psiIndex = first_spo + j;
+    const size_t psiIndex = this->first_spo + j;
     psi[psiIndex]         = signed_one * myV[j];
     dpsi[psiIndex][0]     = signed_one * (g00 * g0[j] + g01 * g1[j] + g02 * g2[j]);
     dpsi[psiIndex][1]     = signed_one * (g10 * g0[j] + g11 * g1[j] + g12 * g2[j]);
@@ -261,9 +261,9 @@ inline void SplineR2RT<ST>::assign_vgl_from_l(int bc_sign, ValueVector& psi, Gra
   const ST* restrict g2 = myG.data(2);
 
 #pragma omp simd
-  for (int psiIndex = first_spo; psiIndex < last_spo; ++psiIndex)
+  for (int psiIndex = this->first_spo; psiIndex < this->last_spo; ++psiIndex)
   {
-    const size_t j    = psiIndex - first_spo;
+    const size_t j    = psiIndex - this->first_spo;
     psi[psiIndex]     = signed_one * myV[j];
     dpsi[psiIndex][0] = signed_one * g0[j];
     dpsi[psiIndex][1] = signed_one * g1[j];
@@ -302,7 +302,7 @@ void SplineR2RT<ST>::assign_vgh(int bc_sign,
                                int last) const
 {
   // protect last
-  last = last > kPoints.size() ? kPoints.size() : last;
+  last = last > this->kPoints.size() ? this->kPoints.size() : last;
 
   const ST signed_one = (bc_sign & 1) ? -1 : 1;
   const ST g00 = PrimLattice.G(0), g01 = PrimLattice.G(1), g02 = PrimLattice.G(2), g10 = PrimLattice.G(3),
@@ -327,7 +327,7 @@ void SplineR2RT<ST>::assign_vgh(int bc_sign,
     const ST dY_r = g10 * g0[j] + g11 * g1[j] + g12 * g2[j];
     const ST dZ_r = g20 * g0[j] + g21 * g1[j] + g22 * g2[j];
 
-    const size_t psiIndex = j + first_spo;
+    const size_t psiIndex = j + this->first_spo;
     psi[psiIndex]         = signed_one * myV[j];
     dpsi[psiIndex][0]     = signed_one * dX_r;
     dpsi[psiIndex][1]     = signed_one * dY_r;
@@ -386,7 +386,7 @@ void SplineR2RT<ST>::assign_vghgh(int bc_sign,
                                  int last) const
 {
   // protect last
-  last = last < 0 ? kPoints.size() : (last > kPoints.size() ? kPoints.size() : last);
+  last = last < 0 ? this->kPoints.size() : (last > this->kPoints.size() ? this->kPoints.size() : last);
 
   const ST signed_one = (bc_sign & 1) ? -1 : 1;
   const ST g00 = PrimLattice.G(0), g01 = PrimLattice.G(1), g02 = PrimLattice.G(2), g10 = PrimLattice.G(3),
@@ -426,7 +426,7 @@ void SplineR2RT<ST>::assign_vghgh(int bc_sign,
     const ST dY_r = g10 * g0[j] + g11 * g1[j] + g12 * g2[j];
     const ST dZ_r = g20 * g0[j] + g21 * g1[j] + g22 * g2[j];
 
-    const size_t psiIndex = j + first_spo;
+    const size_t psiIndex = j + this->first_spo;
     psi[psiIndex]         = signed_one * val_r;
     dpsi[psiIndex][0]     = signed_one * dX_r;
     dpsi[psiIndex][1]     = signed_one * dY_r;
