@@ -253,11 +253,11 @@ SPOSetBuilderFactoryT<T>::addSPOSet(std::unique_ptr<SPOSetT<T>> spo)
 template <typename T>
 std::string SPOSetBuilderFactoryT<T>::basisset_tag = "basisset";
 
-#ifdef QMC_COMPLEX
+// #ifdef QMC_COMPLEX
 template class SPOSetBuilderFactoryT<std::complex<double>>;
 template class SPOSetBuilderFactoryT<std::complex<float>>;
-#else
+// #else
 template class SPOSetBuilderFactoryT<double>;
 template class SPOSetBuilderFactoryT<float>;
-#endif
+// #endif
 } // namespace qmcplusplus

@@ -125,6 +125,10 @@ protected:
         Matrix<RealType>& Creal) const;
 
 private:
+    /// enable cusp correction
+    std::unique_ptr<SPOSetT<T>>
+    createWithCuspCorrection(xmlNodePtr cur, const std::string& spo_name,
+        std::string cusp_file, std::unique_ptr<BasisSet_t>&& myBasisSet);
     /// load a basis set from XML input
     std::unique_ptr<BasisSet_t>
     loadBasisSetFromXML(xmlNodePtr cur, xmlNodePtr parent);
