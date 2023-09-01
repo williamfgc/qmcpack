@@ -85,7 +85,9 @@ if(OHMMS_DIM MATCHES 3)
       LCAO/LCAOrbitalBuilderT.cpp
       LCAO/MultiQuinticSpline1D.cpp
       LCAO/AOBasisBuilder.cpp
-      LCAO/SoaLocalizedBasisSet.cpp)
+      LCAO/AOBasisBuilderT.cpp
+      LCAO/SoaLocalizedBasisSet.cpp
+      LCAO/SoaLocalizedBasisSetT.cpp)
   if(QMC_COMPLEX)
     set(FERMION_SRCS ${FERMION_SRCS} LCAO/LCAOSpinorBuilder.cpp LCAO/LCAOSpinorBuilder.cpp)
   else(QMC_COMPLEX)
