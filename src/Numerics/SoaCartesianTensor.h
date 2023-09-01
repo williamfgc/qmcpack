@@ -39,10 +39,10 @@ namespace qmcplusplus
 template<class T>
 struct SoaCartesianTensor
 {
-  using value_type     = T;
   using ggg_type       = TinyVector<Tensor<T, 3>, 3>;
   using OffloadArray2D = Array<T, 2, OffloadPinnedAllocator<T>>;
   using OffloadArray3D = Array<T, 3, OffloadPinnedAllocator<T>>;
+  using ValueType      = T;
 
   ///maximum angular momentum
   int Lmax;
