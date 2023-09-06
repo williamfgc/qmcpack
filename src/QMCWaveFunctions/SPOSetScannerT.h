@@ -22,7 +22,7 @@ namespace qmcplusplus
 {
 /** a scanner for all the SPO sets.
    */
-template <typename T>
+template<typename T>
 class SPOSetScannerT
 {
 public:
@@ -190,18 +190,13 @@ public:
     // restore the whole target.
     target.R = R_saved;
     target.update();
-#ifdef QMC_COMPLEX
-    output_report << "#   Report: Orb   Value_avg I/R  Gradients_avg  Laplacian_avg" << std::endl;
-#else
-    output_report << "#   Report: Orb   Value_avg   Gradients_avg   Laplacian_avg" << std::endl;
-#endif
+
+    output_report << report_header_() << std::endl;
+
     for (int iorb = 0; iorb < OrbitalSize; iorb++)
       output_report << "\t" << iorb << "    " << std::scientific
-                    << SPO_v_avg[iorb] * static_cast<RealType>(1.0 / nknots) << "   "
-#ifdef QMC_COMPLEX
-                    << SPO_v_avg[iorb].imag() / SPO_v_avg[iorb].real() << "   "
-#endif
-                    << SPO_g_avg[iorb][0] * static_cast<RealType>(1.0 / nknots) << "   "
+                    << SPO_v_avg[iorb] * static_cast<RealType>(1.0 / nknots) << "   " << report_ratio_(SPO_v_avg, iorb)
+                    << "   " << SPO_g_avg[iorb][0] * static_cast<RealType>(1.0 / nknots) << "   "
                     << SPO_g_avg[iorb][1] * static_cast<RealType>(1.0 / nknots) << "   "
                     << SPO_g_avg[iorb][2] * static_cast<RealType>(1.0 / nknots) << "   "
                     << SPO_l_avg[iorb] * static_cast<RealType>(1.0 / nknots) << std::fixed << std::endl;
@@ -210,7 +205,56 @@ public:
     output_l.close();
     output_report.close();
   }
+
+private:
+  std::string report_header_();
+  std::string report_ratio_(const ValueVector& SPO_v_avg, int iorb);
 };
+
+template<>
+std::string SPOSetScannerT<float>::report_header_()
+{
+  return "#   Report: Orb   Value_avg   Gradients_avg   Laplacian_avg";
+}
+template<>
+std::string SPOSetScannerT<double>::report_header_()
+{
+  return "#   Report: Orb   Value_avg   Gradients_avg   Laplacian_avg";
+}
+template<>
+std::string SPOSetScannerT<std::complex<float>>::report_header_()
+{
+  return "#   Report: Orb   Value_avg I/R  Gradients_avg  Laplacian_avg";
+}
+template<>
+std::string SPOSetScannerT<std::complex<double>>::report_header_()
+{
+  return "#   Report: Orb   Value_avg I/R  Gradients_avg  Laplacian_avg";
+}
+
+template<>
+std::string SPOSetScannerT<float>::report_ratio_(const ValueVector&, int)
+{
+  return "";
+}
+template<>
+std::string SPOSetScannerT<double>::report_ratio_(const ValueVector&, int)
+{
+  return "";
+}
+template<>
+std::string SPOSetScannerT<std::complex<float>>::report_ratio_(const ValueVector& SPO_v_avg, int iorb)
+{
+  return std::to_string(SPO_v_avg[iorb].imag() / SPO_v_avg[iorb].real());
+}
+
+template<>
+std::string SPOSetScannerT<std::complex<double>>::report_ratio_(const ValueVector& SPO_v_avg, int iorb)
+{
+  return std::to_string(SPO_v_avg[iorb].imag() / SPO_v_avg[iorb].real());
+}
+
+
 } // namespace qmcplusplus
 
 #endif
