@@ -28,10 +28,8 @@
 #if OHMMS_DIM == 3
 #include "QMCWaveFunctions/LCAO/LCAOrbitalBuilderT.h"
 
-#if defined(QMC_COMPLEX)
 #include "QMCWaveFunctions/EinsplineSpinorSetBuilder.h"
 #include "QMCWaveFunctions/LCAO/LCAOSpinorBuilderT.h"
-#endif
 
 #if defined(HAVE_EINSPLINE)
 #include "QMCWaveFunctions/EinsplineSetBuilder.h"
