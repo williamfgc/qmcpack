@@ -28,7 +28,7 @@
 #include "OhmmsData/AttributeSet.h"
 #include "QMCWaveFunctions/SPOSetT.h"
 #include "SoaAtomicBasisSet.h"
-#include "SoaLocalizedBasisSet.h"
+#include "SoaLocalizedBasisSetT.h"
 
 #include "CuspCorrectionConstructionT.h"
 #include "LCAOrbitalSetWithCorrectionT.h"
@@ -61,7 +61,7 @@ struct ao_traits<T, ORBT, 0, 0>
   using radial_type  = MultiQuinticSpline1D<T>;
   using angular_type = SoaCartesianTensor<T>;
   using ao_type      = SoaAtomicBasisSet<radial_type, angular_type>;
-  using basis_type   = SoaLocalizedBasisSet<ao_type, ORBT>;
+  using basis_type   = SoaLocalizedBasisSetT<ao_type, ORBT>;
 };
 
 /** specialization for numerical-spherical AO */
@@ -71,7 +71,7 @@ struct ao_traits<T, ORBT, 0, 1>
   using radial_type  = MultiQuinticSpline1D<T>;
   using angular_type = SoaSphericalTensor<T>;
   using ao_type      = SoaAtomicBasisSet<radial_type, angular_type>;
-  using basis_type   = SoaLocalizedBasisSet<ao_type, ORBT>;
+  using basis_type   = SoaLocalizedBasisSetT<ao_type, ORBT>;
 };
 
 /** specialization for GTO-cartesian AO */
@@ -81,7 +81,7 @@ struct ao_traits<T, ORBT, 1, 0>
   using radial_type  = MultiFunctorAdapter<GaussianCombo<T>>;
   using angular_type = SoaCartesianTensor<T>;
   using ao_type      = SoaAtomicBasisSet<radial_type, angular_type>;
-  using basis_type   = SoaLocalizedBasisSet<ao_type, ORBT>;
+  using basis_type   = SoaLocalizedBasisSetT<ao_type, ORBT>;
 };
 
 /** specialization for GTO-cartesian AO */
@@ -91,7 +91,7 @@ struct ao_traits<T, ORBT, 1, 1>
   using radial_type  = MultiFunctorAdapter<GaussianCombo<T>>;
   using angular_type = SoaSphericalTensor<T>;
   using ao_type      = SoaAtomicBasisSet<radial_type, angular_type>;
-  using basis_type   = SoaLocalizedBasisSet<ao_type, ORBT>;
+  using basis_type   = SoaLocalizedBasisSetT<ao_type, ORBT>;
 };
 
 /** specialization for STO-spherical AO */
@@ -101,7 +101,7 @@ struct ao_traits<T, ORBT, 2, 1>
   using radial_type  = MultiFunctorAdapter<SlaterCombo<T>>;
   using angular_type = SoaSphericalTensor<T>;
   using ao_type      = SoaAtomicBasisSet<radial_type, angular_type>;
-  using basis_type   = SoaLocalizedBasisSet<ao_type, ORBT>;
+  using basis_type   = SoaLocalizedBasisSetT<ao_type, ORBT>;
 };
 
 inline bool is_same(const xmlChar* a, const char* b) { return !strcmp((const char*)a, b); }

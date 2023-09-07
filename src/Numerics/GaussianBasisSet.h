@@ -28,6 +28,7 @@ struct GaussianCombo
   // but maybe it can be different precision
   // Possibly one of these types is the full precision and the other reduced precision
   using real_type = T;
+  using ValueType = real_type;
   real_type Y, dY, d2Y, d3Y;
 
   struct BasicGaussian

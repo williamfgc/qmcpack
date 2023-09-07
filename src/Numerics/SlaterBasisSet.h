@@ -25,6 +25,7 @@ struct SlaterCombo
 {
   static_assert(std::is_floating_point<T>::value, "T must be a float point type");
   using real_type   = T;
+  using ValueType   = real_type;
   using Component_t = GenericSTO<T>;
 
   int L;

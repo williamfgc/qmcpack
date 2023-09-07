@@ -85,6 +85,7 @@ class MultiQuinticSpline1D
 {
 public:
   using RealType  = T;
+  using ValueType = T;
   using GridType  = OneDimGridBase<T>;
   using CoeffType = Matrix<T, aligned_allocator<T>>;
 

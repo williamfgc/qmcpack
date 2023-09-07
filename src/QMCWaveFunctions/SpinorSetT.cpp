@@ -220,7 +220,7 @@ void SpinorSetT<T>::mw_evaluateVGLandDetRatioGradsWithSpin(const RefVectorWithLe
   auto& spo_leader = spo_list.template getCastedLeader<SpinorSetT<T>>();
   auto& P_leader   = P_list.getLeader();
   assert(this == &spo_leader);
-  assert(phi_vgl_v.size(0) == DIM_VGL);
+  assert(phi_vgl_v.size(0) == QMCTraits::DIM_VGL);
   assert(phi_vgl_v.size(1) == spo_list.size());
   const size_t nw             = spo_list.size();
   const size_t norb_requested = phi_vgl_v.size(2);
