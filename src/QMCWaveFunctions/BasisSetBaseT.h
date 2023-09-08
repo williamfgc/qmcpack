@@ -22,7 +22,7 @@
 #define QMCPLUSPLUS_BASISSETBASET_H
 
 #include "OMPTarget/OffloadAlignedAllocators.hpp"
-#include "Particle/ParticleSetT.h"
+#include "Particle/ParticleSet.h"
 #include "QMCWaveFunctions/OrbitalSetTraits.h"
 
 namespace qmcplusplus

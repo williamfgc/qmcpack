@@ -27,13 +27,13 @@
 #define QMCPLUSPLUS_EINSPLINE_SET_BUILDERT_H
 
 #include "QMCWaveFunctions/BandInfo.h"
-#include "QMCWaveFunctions/BsplineFactory/EinsplineSetBuilder.h"
+#include "QMCWaveFunctions/BsplineFactory/BsplineReaderBaseT.h"
 #include "QMCWaveFunctions/SPOSetBuilderT.h"
 
 #include <filesystem>
 #include <map>
 
-// #define PW_COEFF_NORM_TOLERANCE 1e-6
+#define PW_COEFF_NORM_TOLERANCE 1e-6
 
 class Communicate;
 
