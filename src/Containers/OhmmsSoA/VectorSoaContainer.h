@@ -211,6 +211,7 @@ struct VectorSoaContainer
   template<typename T1>
   void copyIn(const Vector<TinyVector<T1, D>>& in)
   {
+    static_assert(std::is_same_v<T, T1>);
     //if(nLocal!=in.size()) resize(in.size());
     PosAoS2SoA(nLocal, D, reinterpret_cast<const T1*>(in.first_address()), D, myData, nGhosts);
   }
@@ -222,6 +223,7 @@ struct VectorSoaContainer
   template<typename T1>
   void copyOut(Vector<TinyVector<T1, D>>& out) const
   {
+    static_assert(std::is_same_v<T, T1>);
     PosSoA2AoS(nLocal, D, myData, nGhosts, reinterpret_cast<T1*>(out.first_address()), D);
   }
 
