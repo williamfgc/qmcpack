@@ -25,6 +25,7 @@
 #include "QMCWaveFunctions/ElectronGas/FreeOrbitalBuilderT.h"
 #include "QMCWaveFunctions/HarmonicOscillator/SHOSetBuilderT.h"
 #include "QMCWaveFunctions/SPOSetScannerT.h"
+#include "PlaneWave/PWOrbitalSetBuilder.h"
 #if OHMMS_DIM == 3
 #include "QMCWaveFunctions/LCAO/LCAOSpinorBuilderT.h"
 #include "QMCWaveFunctions/LCAO/LCAOrbitalBuilderT.h"
@@ -98,8 +99,8 @@ std::unique_ptr<SPOSetBuilderT<T>> SPOSetBuilderFactoryT<T>::createSPOSetBuilder
 {
   ReportEngine PRE(ClassName, "createSPOSetBuilder");
   std::string sourceOpt("ion0");
-  std::string type("");
-  std::string name("");
+  std::string type;
+  std::string name;
   OhmmsAttributeSet aAttrib;
   aAttrib.add(sourceOpt, "source");
   aAttrib.add(type, "type");
@@ -131,6 +132,11 @@ std::unique_ptr<SPOSetBuilderT<T>> SPOSetBuilderFactoryT<T>::createSPOSetBuilder
   {
     app_log() << "Harmonic Oscillator SPO set" << std::endl;
     bb = std::make_unique<SHOSetBuilderT<T>>(targetPtcl, myComm);
+  }
+  else if (type == "PWBasis" || type == "PW" || type == "pw")
+  {
+    app_log() << "Planewave basis SPO set" << std::endl;
+    bb = std::make_unique<PWOrbitalSetBuilder>(targetPtcl, myComm, rootNode);
   }
 #if OHMMS_DIM == 3
   else if (type.find("spline") < type.size())

@@ -25,13 +25,9 @@
  */
 #ifndef QMCPLUSPLUS_SPLINESET_READER_H
 #define QMCPLUSPLUS_SPLINESET_READER_H
-#include "mpi/collectives.h"
-#include "mpi/point2point.h"
-#include "Utilities/FairDivide.h"
-#include "QMCWaveFunctions/BsplineFactory/BsplineReaderBase.h"
-#include "Utilities/ProgressReportEngine.h"
-#include "QMCWaveFunctions/BsplineFactory/einspline_helper.hpp"
-#include <fftw3.h>
+
+#include "Configuration.h"
+#include "QMCWaveFunctions/BsplineFactory/SplineSetReaderT.h"
 
 namespace qmcplusplus
 {
