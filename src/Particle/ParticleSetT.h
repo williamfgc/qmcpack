@@ -71,6 +71,7 @@ public:
     using FullPrecRealType = typename ParticleSetTraits<T>::FullPrecRealType;
     using ComplexType = typename ParticleSetTraits<T>::ComplexType;
     using PosType = typename ParticleSetTraits<T>::PosType;
+    using TensorType       = typename ParticleSetTraits<T>::TensorType;
 
     using PropertySetType = typename ParticleSetTraits<T>::PropertySetType;
 
