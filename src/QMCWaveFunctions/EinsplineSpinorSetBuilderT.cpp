@@ -22,17 +22,11 @@
 #include "OhmmsData/AttributeSet.h"
 #include "Message/CommOperators.h"
 #include "Utilities/Timer.h"
-<<<<<<< HEAD:src/QMCWaveFunctions/BsplineFactory/EinsplineSpinorSetBuilder.cpp
-#include "einspline_helper.hpp"
-#include "BsplineReaderBase.h"
-#include "createBsplineReader.h"
-
-=======
-#include "QMCWaveFunctions/einspline_helper.hpp"
+#include "QMCWaveFunctions/BsplineFactory/einspline_helper.hpp"
 #include "QMCWaveFunctions/BsplineFactory/BsplineReaderBaseT.h"
 #include "QMCWaveFunctions/BsplineFactory/createBsplineReaderT.h"
 #include "QMCWaveFunctions/SpinorSet.h"
->>>>>>> 6c3f36dc7... parent 7d5cacdd33d8a0501784224b4e62619750e1c556:src/QMCWaveFunctions/EinsplineSpinorSetBuilderT.cpp
+
 namespace qmcplusplus
 {
 template<typename T>

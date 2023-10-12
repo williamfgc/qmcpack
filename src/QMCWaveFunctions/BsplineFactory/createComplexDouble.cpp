@@ -23,7 +23,7 @@
 #include "SplineC2COMPTarget.h"
 #include "HybridRepCplx.h"
 #include <fftw3.h>
-#include "QMCWaveFunctions/einspline_helper.hpp"
+#include "QMCWaveFunctions/BsplineFactory/einspline_helper.hpp"
 #include "QMCWaveFunctions/BsplineFactory/BsplineReaderBase.h"
 #include "QMCWaveFunctions/BsplineFactory/SplineSetReader.h"
 #include "QMCWaveFunctions/BsplineFactory/HybridRepSetReaderT.h"

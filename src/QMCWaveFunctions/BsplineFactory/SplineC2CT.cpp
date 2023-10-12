@@ -215,11 +215,15 @@ void SplineC2CT<ST, VT>::evaluateDetRatios(const VirtualParticleSetT<VT>& VP,
 
 #pragma omp parallel
     {
-      if (tid == 0) // just like #pragma omp master, but one fewer call to
-                    // the runtime
-        ratios_private.resize(VP.getTotalNum(), omp_get_num_threads());
+      int tid = omp_get_thread_num();
+      // initialize thread private ratios
+      if (need_resize)
+      {
+        if (tid == 0) // just like #pragma omp master, but one fewer call to
+                      // the runtime
+          ratios_private.resize(VP.getTotalNum(), omp_get_num_threads());
 #pragma omp barrier
-        }
+      }
         int first, last;
         // Factor of 2 because psi is complex and the spline storage and
         // evaluation uses a real type
@@ -240,17 +244,6 @@ void SplineC2CT<ST, VT>::evaluateDetRatios(const VirtualParticleSetT<VT>& VP,
                 psiinv.data() + first_cplx, last_cplx - first_cplx);
         }
     }
-    int first, last;
-    // Factor of 2 because psi is complex and the spline storage and
-    // evaluation uses a real type
-    FairDivideAligned(2 * psi.size(), getAlignment<ST>(), omp_get_num_threads(), tid, first, last);
-    const int first_cplx = first / 2;
-    const int last_cplx  = this->kPoints.size() < last / 2 ? this->kPoints.size() : last / 2;
-
-    for (int iat = 0; iat < VP.getTotalNum(); ++iat)
-    {
-      const PointType& r = VP.activeR(iat);
-      PointType ru(PrimLattice.toUnit_floor(r));
 
     // do the reduction manually
     for (int iat = 0; iat < VP.getTotalNum(); ++iat) {

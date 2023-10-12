@@ -104,7 +104,6 @@ if(OHMMS_DIM MATCHES 3)
       set(FERMION_SRCS ${FERMION_SRCS}
         EinsplineSpinorSetBuilderT.cpp) 
       set(FERMION_OMPTARGET_SRCS ${FERMION_OMPTARGET_SRCS}
-        BsplineFactory/SplineC2COMPTarget.cpp
         EinsplineSpinorSetBuilderT.cpp)
       set(FERMION_OMPTARGET_SRCS ${FERMION_OMPTARGET_SRCS})
     else(QMC_COMPLEX)
@@ -122,7 +121,9 @@ if(OHMMS_DIM MATCHES 3)
     PlaneWave/PWBasisT.cpp
     PlaneWave/PWOrbitalSetT.cpp
     PlaneWave/PWRealOrbitalSetT.cpp
-    PlaneWave/PWParameterSet.cpp)
+    PlaneWave/PWParameterSet.cpp
+    PlaneWave/PWOrbitalSetBuilder.cpp
+    )
   if(QMC_COMPLEX)
     set(FERMION_SRCS ${FERMION_SRCS} PlaneWave/PWOrbitalSet.cpp)
   else()

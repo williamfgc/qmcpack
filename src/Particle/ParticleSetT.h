@@ -66,6 +66,8 @@ class ParticleSetT : public OhmmsElementBase
 {
 public:
     using RealType = typename ParticleSetTraits<T>::RealType;
+    using ValueType        = typename ParticleSetTraits<T>::ValueType;
+    using GradType         = typename ParticleSetTraits<T>::GradType;
     using FullPrecRealType = typename ParticleSetTraits<T>::FullPrecRealType;
     using ComplexType = typename ParticleSetTraits<T>::ComplexType;
     using PosType = typename ParticleSetTraits<T>::PosType;
@@ -93,6 +95,8 @@ public:
     using PropertyContainer_t = typename Walker_t::PropertyContainer_t;
     /// buffer type for a serialized buffer
     using Buffer_t = PooledData<RealType>;
+
+    using SingleParticleValue = typename LatticeParticleTraits<T>::SingleParticleValue;
 
     enum quantum_domains
     {
