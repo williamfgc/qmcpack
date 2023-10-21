@@ -416,7 +416,6 @@ struct SoaDistanceTableAATOMPTarget :
         auto* rsoa_dev_list_ptr =
             coordinates_leader.getMultiWalkerRSoADevicePtrs().data();
         auto* r_dr_ptr = mw_new_old_dist_displ.data();
-        auto* new_pos_ptr = coordinates_leader.getFusedNewPosBuffer().data();
         const size_t new_pos_stride =
             coordinates_leader.getFusedNewPosBuffer().capacity();
 
@@ -428,6 +427,7 @@ struct SoaDistanceTableAATOMPTarget :
             for (int iw = 0; iw < nw; ++iw)
                 for (int team_id = 0; team_id < num_teams; team_id++) {
                     auto* source_pos_ptr = rsoa_dev_list_ptr[iw];
+                    auto* new_pos_ptr = coordinates_leader.getFusedNewPosBuffer().data();
                     const size_t first = ChunkSizePerTeam * team_id;
                     const size_t last = omptarget::min(
                         first + ChunkSizePerTeam, num_sources_local);
