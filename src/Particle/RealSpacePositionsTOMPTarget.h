@@ -121,6 +121,7 @@ public:
 
         auto* mw_pos_ptr = mw_new_pos.data();
         PRAGMA_OFFLOAD("omp target update to(\
+            is_device_ptr(mw_pos_ptr, mw_rosa_ptr) \
             mw_pos_ptr[DIM * mw_new_pos.capacity()])")
 
         coords_leader.is_nw_new_pos_prepared = true;
