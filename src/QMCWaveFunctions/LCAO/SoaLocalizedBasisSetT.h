@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////////////
-// This file is distributed under the University of Illinois/NCSA Open Source
-// License. See LICENSE file in top directory for details.
+// This file is distributed under the University of Illinois/NCSA Open Source License.
+// See LICENSE file in top directory for details.
 //
 // Copyright (c) 2016 Jeongnim Kim and QMCPACK developers.
 //
@@ -122,7 +122,7 @@ public:
    * @param v   Array(n_walkers, BasisSetSize)
    */
   void mw_evaluateValueVPs(const RefVectorWithLeader<SoaBasisSetBase<ORBT>>& basis_list,
-                           const RefVectorWithLeader<const VirtualParticleSet>& vp_list,
+                           const RefVectorWithLeader<const VirtualParticleSetT>& vp_list,
                            OffloadMWVArray& v) override;
 
   /** compute VGL using packed array with all walkers
