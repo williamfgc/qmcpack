@@ -14,10 +14,9 @@
 // at Urbana-Champaign
 //////////////////////////////////////////////////////////////////////////////////////
 
-#include "CompositeSPOSetT.h"
+#include "QMCWaveFunctions/CompositeSPOSetT.h"
 
 #include "OhmmsData/AttributeSet.h"
-#include "QMCWaveFunctions/SPOSetBuilderFactory.h"
 #include "Utilities/IteratorUtility.h"
 
 #include <algorithm>
@@ -104,7 +103,7 @@ CompositeSPOSetT<T>::makeClone() const
 template <typename T>
 void
 CompositeSPOSetT<T>::evaluateValue(
-    const ParticleSet& P, int iat, ValueVector& psi)
+    const ParticleSetT<T>& P, int iat, ValueVector& psi)
 {
     int n = 0;
     for (int c = 0; c < components.size(); ++c) {
@@ -118,7 +117,7 @@ CompositeSPOSetT<T>::evaluateValue(
 
 template <typename T>
 void
-CompositeSPOSetT<T>::evaluateVGL(const ParticleSet& P, int iat,
+CompositeSPOSetT<T>::evaluateVGL(const ParticleSetT<T>& P, int iat,
     ValueVector& psi, GradVector& dpsi, ValueVector& d2psi)
 {
     int n = 0;
@@ -137,7 +136,7 @@ CompositeSPOSetT<T>::evaluateVGL(const ParticleSet& P, int iat,
 
 template <typename T>
 void
-CompositeSPOSetT<T>::evaluate_notranspose(const ParticleSet& P, int first,
+CompositeSPOSetT<T>::evaluate_notranspose(const ParticleSetT<T>& P, int first,
     int last, ValueMatrix& logdet, GradMatrix& dlogdet, ValueMatrix& d2logdet)
 {
     const int nat = last - first;
@@ -156,7 +155,7 @@ CompositeSPOSetT<T>::evaluate_notranspose(const ParticleSet& P, int first,
 
 template <typename T>
 void
-CompositeSPOSetT<T>::evaluate_notranspose(const ParticleSet& P, int first,
+CompositeSPOSetT<T>::evaluate_notranspose(const ParticleSetT<T>& P, int first,
     int last, ValueMatrix& logdet, GradMatrix& dlogdet,
     HessMatrix& grad_grad_logdet)
 {
@@ -176,7 +175,7 @@ CompositeSPOSetT<T>::evaluate_notranspose(const ParticleSet& P, int first,
 
 template <typename T>
 void
-CompositeSPOSetT<T>::evaluate_notranspose(const ParticleSet& P, int first,
+CompositeSPOSetT<T>::evaluate_notranspose(const ParticleSetT<T>& P, int first,
     int last, ValueMatrix& logdet, GradMatrix& dlogdet,
     HessMatrix& grad_grad_logdet, GGGMatrix& grad_grad_grad_logdet)
 {
@@ -189,5 +188,38 @@ template class CompositeSPOSetT<double>;
 template class CompositeSPOSetT<float>;
 template class CompositeSPOSetT<std::complex<double>>;
 template class CompositeSPOSetT<std::complex<float>>;
+
+template <typename T>
+std::unique_ptr<SPOSetT<T>>
+CompositeSPOSetBuilderT<T>::createSPOSetFromXML(xmlNodePtr cur)
+{
+    std::vector<std::string> spolist;
+    putContent(spolist, cur);
+    if (spolist.empty()) {
+        return nullptr;
+    }
+
+    auto spo_now = std::make_unique<CompositeSPOSetT<T>>(
+        getXMLAttributeValue(cur, "name"));
+    for (int i = 0; i < spolist.size(); ++i) {
+        const SPOSetT<T>* spo = sposet_builder_factory_.getSPOSet(spolist[i]);
+        if (spo)
+            spo_now->add(spo->makeClone());
+    }
+    return (spo_now->size()) ? std::unique_ptr<SPOSetT<T>>{std::move(spo_now)} :
+                               nullptr;
+}
+
+template <typename T>
+std::unique_ptr<SPOSetT<T>>
+CompositeSPOSetBuilderT<T>::createSPOSet(xmlNodePtr cur, SPOSetInputInfo& input)
+{
+    return createSPOSetFromXML(cur);
+}
+
+template class CompositeSPOSetBuilderT<double>;
+template class CompositeSPOSetBuilderT<float>;
+template class CompositeSPOSetBuilderT<std::complex<double>>;
+template class CompositeSPOSetBuilderT<std::complex<float>>;
 
 } // namespace qmcplusplus

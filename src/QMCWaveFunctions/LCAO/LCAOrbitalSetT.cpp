@@ -163,7 +163,7 @@ LCAOrbitalSetT<T>::makeClone() const
 template <class T>
 void
 LCAOrbitalSetT<T>::evaluateValue(
-    const ParticleSet& P, int iat, ValueVector& psi)
+    const ParticleSetT<T>& P, int iat, ValueVector& psi)
 {
     if (Identity) { // PAY ATTENTION TO COMPLEX
         myBasisSet->evaluateV(P, iat, psi.data());
@@ -407,8 +407,8 @@ LCAOrbitalSetT<T>::evaluate_ionderiv_v_row_impl(
 
 template <class T>
 void
-LCAOrbitalSetT<T>::evaluateVGL(const ParticleSet& P, int iat, ValueVector& psi,
-    GradVector& dpsi, ValueVector& d2psi)
+LCAOrbitalSetT<T>::evaluateVGL(const ParticleSetT<T>& P, int iat,
+    ValueVector& psi, GradVector& dpsi, ValueVector& d2psi)
 {
     // TAKE CARE OF IDENTITY
     {
@@ -433,7 +433,7 @@ template <class T>
 void
 LCAOrbitalSetT<T>::mw_evaluateVGL(
     const RefVectorWithLeader<SPOSetT<T>>& spo_list,
-    const RefVectorWithLeader<ParticleSet>& P_list, int iat,
+    const RefVectorWithLeader<ParticleSetT<T>>& P_list, int iat,
     const RefVector<ValueVector>& psi_v_list,
     const RefVector<GradVector>& dpsi_v_list,
     const RefVector<ValueVector>& d2psi_v_list) const
@@ -466,7 +466,7 @@ template <class T>
 void
 LCAOrbitalSetT<T>::mw_evaluateVGLImplGEMM(
     const RefVectorWithLeader<SPOSetT<T>>& spo_list,
-    const RefVectorWithLeader<ParticleSet>& P_list, int iat,
+    const RefVectorWithLeader<ParticleSetT<T>>& P_list, int iat,
     OffloadMWVGLArray& phi_vgl_v) const
 {
     assert(this == &spo_list.getLeader());
@@ -513,7 +513,7 @@ template <class T>
 void
 LCAOrbitalSetT<T>::mw_evaluateValue(
     const RefVectorWithLeader<SPOSetT<T>>& spo_list,
-    const RefVectorWithLeader<ParticleSet>& P_list, int iat,
+    const RefVectorWithLeader<ParticleSetT<T>>& P_list, int iat,
     const RefVector<ValueVector>& psi_v_list) const
 {
     assert(this == &spo_list.getLeader());
@@ -534,7 +534,7 @@ template <class T>
 void
 LCAOrbitalSetT<T>::mw_evaluateValueImplGEMM(
     const RefVectorWithLeader<SPOSetT<T>>& spo_list,
-    const RefVectorWithLeader<ParticleSet>& P_list, int iat,
+    const RefVectorWithLeader<ParticleSetT<T>>& P_list, int iat,
     OffloadMWVArray& phi_v) const
 {
     assert(this == &spo_list.getLeader());
@@ -566,7 +566,7 @@ template <class T>
 void
 LCAOrbitalSetT<T>::mw_evaluateDetRatios(
     const RefVectorWithLeader<SPOSetT<T>>& spo_list,
-    const RefVectorWithLeader<const VirtualParticleSet>& vp_list,
+    const RefVectorWithLeader<const VirtualParticleSetT<T>>& vp_list,
     const RefVector<ValueVector>& psi_list,
     const std::vector<const T*>& invRow_ptr_list,
     std::vector<std::vector<T>>& ratios_list) const
@@ -583,7 +583,7 @@ LCAOrbitalSetT<T>::mw_evaluateDetRatios(
 
 template <class T>
 void
-LCAOrbitalSetT<T>::evaluateDetRatios(const VirtualParticleSet& VP,
+LCAOrbitalSetT<T>::evaluateDetRatios(const VirtualParticleSetT<T>& VP,
     ValueVector& psi, const ValueVector& psiinv, std::vector<T>& ratios)
 {
     Vector<T> vTemp(Temp.data(0), BasisSetSize);
@@ -609,7 +609,7 @@ template <class T>
 void
 LCAOrbitalSetT<T>::mw_evaluateVGLandDetRatioGrads(
     const RefVectorWithLeader<SPOSetT<T>>& spo_list,
-    const RefVectorWithLeader<ParticleSet>& P_list, int iat,
+    const RefVectorWithLeader<ParticleSetT<T>>& P_list, int iat,
     const std::vector<const T*>& invRow_ptr_list, OffloadMWVGLArray& phi_vgl_v,
     std::vector<T>& ratios, std::vector<GradType>& grads) const
 {
@@ -638,8 +638,8 @@ LCAOrbitalSetT<T>::mw_evaluateVGLandDetRatioGrads(
 
 template <class T>
 void
-LCAOrbitalSetT<T>::evaluateVGH(const ParticleSet& P, int iat, ValueVector& psi,
-    GradVector& dpsi, HessVector& dhpsi)
+LCAOrbitalSetT<T>::evaluateVGH(const ParticleSetT<T>& P, int iat,
+    ValueVector& psi, GradVector& dpsi, HessVector& dhpsi)
 {
     // TAKE CARE OF IDENTITY
     myBasisSet->evaluateVGH(P, iat, Temph);
@@ -655,7 +655,7 @@ LCAOrbitalSetT<T>::evaluateVGH(const ParticleSet& P, int iat, ValueVector& psi,
 
 template <class T>
 void
-LCAOrbitalSetT<T>::evaluateVGHGH(const ParticleSet& P, int iat,
+LCAOrbitalSetT<T>::evaluateVGHGH(const ParticleSetT<T>& P, int iat,
     ValueVector& psi, GradVector& dpsi, HessVector& dhpsi, GGGVector& dghpsi)
 {
     // APP_ABORT("LCAORbitalSet::evaluate(psi,gpsi,hpsi,ghpsi) not
@@ -794,7 +794,7 @@ LCAOrbitalSetT<T>::evaluate_ionderiv_vgl_impl(const vghgh_type& temp, int i,
 
 template <class T>
 void
-LCAOrbitalSetT<T>::evaluate_notranspose(const ParticleSet& P, int first,
+LCAOrbitalSetT<T>::evaluate_notranspose(const ParticleSetT<T>& P, int first,
     int last, ValueMatrix& logdet, GradMatrix& dlogdet, ValueMatrix& d2logdet)
 {
     if (Identity) {
@@ -816,7 +816,7 @@ LCAOrbitalSetT<T>::evaluate_notranspose(const ParticleSet& P, int first,
 
 template <class T>
 void
-LCAOrbitalSetT<T>::evaluate_notranspose(const ParticleSet& P, int first,
+LCAOrbitalSetT<T>::evaluate_notranspose(const ParticleSetT<T>& P, int first,
     int last, ValueMatrix& logdet, GradMatrix& dlogdet,
     HessMatrix& grad_grad_logdet)
 {
@@ -839,7 +839,7 @@ LCAOrbitalSetT<T>::evaluate_notranspose(const ParticleSet& P, int first,
 
 template <class T>
 void
-LCAOrbitalSetT<T>::evaluate_notranspose(const ParticleSet& P, int first,
+LCAOrbitalSetT<T>::evaluate_notranspose(const ParticleSetT<T>& P, int first,
     int last, ValueMatrix& logdet, GradMatrix& dlogdet,
     HessMatrix& grad_grad_logdet, GGGMatrix& grad_grad_grad_logdet)
 {
@@ -864,8 +864,8 @@ LCAOrbitalSetT<T>::evaluate_notranspose(const ParticleSet& P, int first,
 
 template <class T>
 void
-LCAOrbitalSetT<T>::evaluateGradSource(const ParticleSet& P, int first, int last,
-    const ParticleSet& source, int iat_src, GradMatrix& gradphi)
+LCAOrbitalSetT<T>::evaluateGradSource(const ParticleSetT<T>& P, int first,
+    int last, const ParticleSetT<T>& source, int iat_src, GradMatrix& gradphi)
 {
     if (Identity) {
         for (size_t i = 0, iat = first; iat < last; i++, iat++) {
@@ -886,8 +886,8 @@ LCAOrbitalSetT<T>::evaluateGradSource(const ParticleSet& P, int first, int last,
 
 template <class T>
 void
-LCAOrbitalSetT<T>::evaluateGradSource(const ParticleSet& P, int first, int last,
-    const ParticleSet& source, int iat_src, GradMatrix& grad_phi,
+LCAOrbitalSetT<T>::evaluateGradSource(const ParticleSetT<T>& P, int first,
+    int last, const ParticleSetT<T>& source, int iat_src, GradMatrix& grad_phi,
     HessMatrix& grad_grad_phi, GradMatrix& grad_lapl_phi)
 {
     if (Identity) {
@@ -911,8 +911,8 @@ LCAOrbitalSetT<T>::evaluateGradSource(const ParticleSet& P, int first, int last,
 
 template <class T>
 void
-LCAOrbitalSetT<T>::evaluateGradSourceRow(const ParticleSet& P, int iel,
-    const ParticleSet& source, int iat_src, GradVector& gradphi)
+LCAOrbitalSetT<T>::evaluateGradSourceRow(const ParticleSetT<T>& P, int iel,
+    const ParticleSetT<T>& source, int iat_src, GradVector& gradphi)
 {
     if (Identity) {
         myBasisSet->evaluateGradSourceV(P, iel, source, iat_src, this->Temp);

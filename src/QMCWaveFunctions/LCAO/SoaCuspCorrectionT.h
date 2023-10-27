@@ -11,10 +11,9 @@
 
 /** @file SoaCuspCorrectionT.h
  */
-#ifndef QMCPLUSPLUS_SOA_CUSPCORRECTION_H
-#define QMCPLUSPLUS_SOA_CUSPCORRECTION_H
+#ifndef QMCPLUSPLUS_SOA_CUSPCORRECTIONT_H
+#define QMCPLUSPLUS_SOA_CUSPCORRECTIONT_H
 
-#include "Configuration.h"
 #include "QMCWaveFunctions/SPOSetT.h"
 
 namespace qmcplusplus
@@ -69,7 +68,7 @@ public:
      * @param ions ionic system
      * @param els electronic system
      */
-    SoaCuspCorrectionT(ParticleSet& ions, ParticleSet& els);
+    SoaCuspCorrectionT(ParticleSetT<T>& ions, ParticleSetT<T>& els);
 
     /** copy constructor */
     SoaCuspCorrectionT(const SoaCuspCorrectionT& a);
@@ -87,14 +86,14 @@ public:
      * @param trialMove if true, use getTempDists()/getTempDispls()
      */
     void
-    evaluateVGL(const ParticleSet& P, int iat, VGLVector& vgl);
+    evaluateVGL(const ParticleSetT<T>& P, int iat, VGLVector& vgl);
 
     void
-    evaluate_vgl(const ParticleSet& P, int iat, ValueVector& psi,
+    evaluate_vgl(const ParticleSetT<T>& P, int iat, ValueVector& psi,
         GradVector& dpsi, ValueVector& d2psi);
 
     void
-    evaluate_vgl(const ParticleSet& P, int iat, int idx, ValueMatrix& psi,
+    evaluate_vgl(const ParticleSetT<T>& P, int iat, int idx, ValueMatrix& psi,
         GradMatrix& dpsi, ValueMatrix& d2psi);
 
     /** compute values for the iat-paricle move
@@ -102,7 +101,7 @@ public:
      * Always uses getTempDists() and getTempDispls()
      */
     void
-    evaluateV(const ParticleSet& P, int iat, ValueVector& psi);
+    evaluateV(const ParticleSetT<T>& P, int iat, ValueVector& psi);
 
     /** add a new set of Centered Atomic Orbitals
      * @param icenter the index of the center
@@ -112,23 +111,23 @@ public:
     add(int icenter, std::unique_ptr<COT> aos);
 
     void
-    addVGL(const ParticleSet& P, int iat, VGLVector& vgl)
+    addVGL(const ParticleSetT<T>& P, int iat, VGLVector& vgl)
     {
         evaluateVGL(P, iat, vgl);
     }
     void
-    addV(const ParticleSet& P, int iat, ValueVector& psi)
+    addV(const ParticleSetT<T>& P, int iat, ValueVector& psi)
     {
         evaluateV(P, iat, psi);
     }
     void
-    add_vgl(const ParticleSet& P, int iat, int idx, ValueMatrix& vals,
+    add_vgl(const ParticleSetT<T>& P, int iat, int idx, ValueMatrix& vals,
         GradMatrix& dpsi, ValueMatrix& d2psi)
     {
         evaluate_vgl(P, iat, idx, vals, dpsi, d2psi);
     }
     void
-    add_vector_vgl(const ParticleSet& P, int iat, ValueVector& vals,
+    add_vector_vgl(const ParticleSetT<T>& P, int iat, ValueVector& vals,
         GradVector& dpsi, ValueVector& d2psi)
     {
         evaluate_vgl(P, iat, vals, dpsi, d2psi);

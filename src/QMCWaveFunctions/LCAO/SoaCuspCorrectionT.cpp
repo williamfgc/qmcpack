@@ -14,11 +14,13 @@
 #include "SoaCuspCorrectionT.h"
 
 #include "SoaCuspCorrectionBasisSet.h"
+#include "Particle/DistanceTableT.h"
 
 namespace qmcplusplus
 {
 template <class T>
-SoaCuspCorrectionT<T>::SoaCuspCorrectionT(ParticleSet& ions, ParticleSet& els) :
+SoaCuspCorrectionT<T>::SoaCuspCorrectionT(
+    ParticleSetT<T>& ions, ParticleSetT<T>& els) :
     myTableIndex(els.addTable(ions))
 {
     NumCenters = ions.getTotalNum();
@@ -41,7 +43,7 @@ SoaCuspCorrectionT<T>::setOrbitalSetSize(int norbs)
 template <class T>
 inline void
 SoaCuspCorrectionT<T>::evaluateVGL(
-    const ParticleSet& P, int iat, VGLVector& vgl)
+    const ParticleSetT<T>& P, int iat, VGLVector& vgl)
 {
     assert(MaxOrbSize >= vgl.size());
     myVGL = 0.0;
@@ -79,7 +81,7 @@ SoaCuspCorrectionT<T>::evaluateVGL(
 
 template <class T>
 void
-SoaCuspCorrectionT<T>::evaluate_vgl(const ParticleSet& P, int iat,
+SoaCuspCorrectionT<T>::evaluate_vgl(const ParticleSetT<T>& P, int iat,
     ValueVector& psi, GradVector& dpsi, ValueVector& d2psi)
 {
     assert(MaxOrbSize >= psi.size());
@@ -111,7 +113,7 @@ SoaCuspCorrectionT<T>::evaluate_vgl(const ParticleSet& P, int iat,
 
 template <class T>
 void
-SoaCuspCorrectionT<T>::evaluate_vgl(const ParticleSet& P, int iat, int idx,
+SoaCuspCorrectionT<T>::evaluate_vgl(const ParticleSetT<T>& P, int iat, int idx,
     ValueMatrix& psi, GradMatrix& dpsi, ValueMatrix& d2psi)
 {
     assert(MaxOrbSize >= psi.cols());
@@ -144,7 +146,7 @@ SoaCuspCorrectionT<T>::evaluate_vgl(const ParticleSet& P, int iat, int idx,
 template <class T>
 void
 SoaCuspCorrectionT<T>::evaluateV(
-    const ParticleSet& P, int iat, ValueVector& psi)
+    const ParticleSetT<T>& P, int iat, ValueVector& psi)
 {
     assert(MaxOrbSize >= psi.size());
     T* tmp_vals = myVGL[0];

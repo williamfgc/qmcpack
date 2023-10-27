@@ -23,9 +23,9 @@ template <typename T>
 class RotatedSPOsT;
 namespace testing
 {
-opt_variables_type&
+OptVariablesType<double>&
 getMyVarsFull(RotatedSPOsT<double>& rot);
-opt_variables_type&
+OptVariablesType<float>&
 getMyVarsFull(RotatedSPOsT<float>& rot);
 std::vector<std::vector<double>>&
 getHistoryParams(RotatedSPOsT<double>& rot);
@@ -34,11 +34,13 @@ getHistoryParams(RotatedSPOsT<float>& rot);
 } // namespace testing
 
 template <class T>
-class RotatedSPOsT : public SPOSetT<T>, public OptimizableObject
+class RotatedSPOsT : public SPOSetT<T>, public OptimizableObjectT<T>
 {
 public:
     using IndexType = typename SPOSetT<T>::IndexType;
     using RealType = typename SPOSetT<T>::RealType;
+    using ComplexType = typename SPOSetT<T>::ComplexType;
+    using ValueType = typename SPOSetT<T>::ValueType;
     using FullRealType = typename SPOSetT<T>::FullRealType;
     using ValueVector = typename SPOSetT<T>::ValueVector;
     using ValueMatrix = typename SPOSetT<T>::ValueMatrix;
@@ -179,8 +181,8 @@ public:
     // Laplacian portion IMPORTANT NOTE:  The value of P.L holds \nabla^2
     // ln[\psi] but we need  \frac{\nabla^2 \psi}{\psi} and this is what myL_J
     // will hold
-    ParticleSet::ParticleGradient myG_temp, myG_J;
-    ParticleSet::ParticleLaplacian myL_temp, myL_J;
+    typename ParticleSetT<T>::ParticleGradient myG_temp, myG_J;
+    typename ParticleSetT<T>::ParticleLaplacian myL_temp, myL_J;
 
     ValueMatrix Bbar;
     ValueMatrix psiM_inv;
@@ -199,16 +201,17 @@ public:
         const RotationIndices& full_rotations);
 
     void
-    evaluateDerivatives(ParticleSet& P, const opt_variables_type& optvars,
+    evaluateDerivatives(ParticleSetT<T>& P, const OptVariablesType<T>& optvars,
         Vector<T>& dlogpsi, Vector<T>& dhpsioverpsi, const int& FirstIndex,
         const int& LastIndex) override;
 
     void
-    evaluateDerivativesWF(ParticleSet& P, const opt_variables_type& optvars,
-        Vector<T>& dlogpsi, int FirstIndex, int LastIndex) override;
+    evaluateDerivativesWF(ParticleSetT<T>& P,
+        const OptVariablesType<T>& optvars, Vector<T>& dlogpsi, int FirstIndex,
+        int LastIndex) override;
 
     void
-    evaluateDerivatives(ParticleSet& P, const opt_variables_type& optvars,
+    evaluateDerivatives(ParticleSetT<T>& P, const OptVariablesType<T>& optvars,
         Vector<T>& dlogpsi, Vector<T>& dhpsioverpsi, const T& psiCurrent,
         const std::vector<T>& Coeff, const std::vector<size_t>& C2node_up,
         const std::vector<size_t>& C2node_dn, const ValueVector& detValues_up,
@@ -222,9 +225,10 @@ public:
         const std::vector<std::vector<int>>& lookup_tbl) override;
 
     void
-    evaluateDerivativesWF(ParticleSet& P, const opt_variables_type& optvars,
-        Vector<T>& dlogpsi, const FullRealType& psiCurrent,
-        const std::vector<T>& Coeff, const std::vector<size_t>& C2node_up,
+    evaluateDerivativesWF(ParticleSetT<T>& P,
+        const OptVariablesType<T>& optvars, Vector<ValueType>& dlogpsi,
+        const ValueType& psiCurrent, const std::vector<ValueType>& Coeff,
+        const std::vector<size_t>& C2node_up,
         const std::vector<size_t>& C2node_dn, const ValueVector& detValues_up,
         const ValueVector& detValues_dn, const ValueMatrix& M_up,
         const ValueMatrix& M_dn, const ValueMatrix& Minv_up,
@@ -235,10 +239,10 @@ public:
     // parameter derivative using table method
     void
     table_method_eval(Vector<T>& dlogpsi, Vector<T>& dhpsioverpsi,
-        const ParticleSet::ParticleLaplacian& myL_J,
-        const ParticleSet::ParticleGradient& myG_J, const size_t nel,
-        const size_t nmo, const T& psiCurrent, const std::vector<T>& Coeff,
-        const std::vector<size_t>& C2node_up,
+        const typename ParticleSetT<T>::ParticleLaplacian& myL_J,
+        const typename ParticleSetT<T>::ParticleGradient& myG_J,
+        const size_t nel, const size_t nmo, const T& psiCurrent,
+        const std::vector<T>& Coeff, const std::vector<size_t>& C2node_up,
         const std::vector<size_t>& C2node_dn, const ValueVector& detValues_up,
         const ValueVector& detValues_dn, const GradMatrix& grads_up,
         const GradMatrix& grads_dn, const ValueMatrix& lapls_up,
@@ -260,27 +264,27 @@ public:
         const std::vector<std::vector<int>>& lookup_tbl);
 
     void
-    extractOptimizableObjectRefs(UniqueOptObjRefs& opt_obj_refs) override
+    extractOptimizableObjectRefs(UniqueOptObjRefsT<T>& opt_obj_refs) override
     {
         opt_obj_refs.push_back(*this);
     }
 
     void
-    checkInVariablesExclusive(opt_variables_type& active) override
+    checkInVariablesExclusive(OptVariablesType<T>& active) override
     {
         if (this->myVars.size())
             active.insertFrom(this->myVars);
     }
 
     void
-    checkOutVariables(const opt_variables_type& active) override
+    checkOutVariables(const OptVariablesType<T>& active) override
     {
         this->myVars.getIndex(active);
     }
 
     /// reset
     void
-    resetParametersExclusive(const opt_variables_type& active) override;
+    resetParametersExclusive(const OptVariablesType<T>& active) override;
 
     void
     writeVariationalParameters(hdf_archive& hout) override;
@@ -303,14 +307,14 @@ public:
     }
 
     void
-    evaluateValue(const ParticleSet& P, int iat, ValueVector& psi) override
+    evaluateValue(const ParticleSetT<T>& P, int iat, ValueVector& psi) override
     {
         assert(psi.size() <= this->OrbitalSetSize);
         Phi->evaluateValue(P, iat, psi);
     }
 
     void
-    evaluateVGL(const ParticleSet& P, int iat, ValueVector& psi,
+    evaluateVGL(const ParticleSetT<T>& P, int iat, ValueVector& psi,
         GradVector& dpsi, ValueVector& d2psi) override
     {
         assert(psi.size() <= this->OrbitalSetSize);
@@ -318,20 +322,20 @@ public:
     }
 
     void
-    evaluateDetRatios(const VirtualParticleSet& VP, ValueVector& psi,
+    evaluateDetRatios(const VirtualParticleSetT<T>& VP, ValueVector& psi,
         const ValueVector& psiinv, std::vector<T>& ratios) override
     {
         Phi->evaluateDetRatios(VP, psi, psiinv, ratios);
     }
 
     void
-    evaluateDerivRatios(const VirtualParticleSet& VP,
-        const opt_variables_type& optvars, ValueVector& psi,
+    evaluateDerivRatios(const VirtualParticleSetT<T>& VP,
+        const OptVariablesType<T>& optvars, ValueVector& psi,
         const ValueVector& psiinv, std::vector<T>& ratios, Matrix<T>& dratios,
         int FirstIndex, int LastIndex) override;
 
     void
-    evaluateVGH(const ParticleSet& P, int iat, ValueVector& psi,
+    evaluateVGH(const ParticleSetT<T>& P, int iat, ValueVector& psi,
         GradVector& dpsi, HessVector& grad_grad_psi) override
     {
         assert(psi.size() <= this->OrbitalSetSize);
@@ -339,7 +343,7 @@ public:
     }
 
     void
-    evaluateVGHGH(const ParticleSet& P, int iat, ValueVector& psi,
+    evaluateVGHGH(const ParticleSetT<T>& P, int iat, ValueVector& psi,
         GradVector& dpsi, HessVector& grad_grad_psi,
         GGGVector& grad_grad_grad_psi) override
     {
@@ -348,7 +352,7 @@ public:
     }
 
     void
-    evaluate_notranspose(const ParticleSet& P, int first, int last,
+    evaluate_notranspose(const ParticleSetT<T>& P, int first, int last,
         ValueMatrix& logdet, GradMatrix& dlogdet,
         ValueMatrix& d2logdet) override
     {
@@ -356,7 +360,7 @@ public:
     }
 
     void
-    evaluate_notranspose(const ParticleSet& P, int first, int last,
+    evaluate_notranspose(const ParticleSetT<T>& P, int first, int last,
         ValueMatrix& logdet, GradMatrix& dlogdet,
         HessMatrix& grad_grad_logdet) override
     {
@@ -365,7 +369,7 @@ public:
     }
 
     void
-    evaluate_notranspose(const ParticleSet& P, int first, int last,
+    evaluate_notranspose(const ParticleSetT<T>& P, int first, int last,
         ValueMatrix& logdet, GradMatrix& dlogdet, HessMatrix& grad_grad_logdet,
         GGGMatrix& grad_grad_grad_logdet) override
     {
@@ -374,24 +378,21 @@ public:
     }
 
     void
-    evaluateGradSource(const ParticleSet& P, int first, int last,
-        const ParticleSet& source, int iat_src, GradMatrix& grad_phi) override
+    evaluateGradSource(const ParticleSetT<T>& P, int first, int last,
+        const ParticleSetT<T>& source, int iat_src,
+        GradMatrix& grad_phi) override
     {
         Phi->evaluateGradSource(P, first, last, source, iat_src, grad_phi);
     }
 
     void
-    evaluateGradSource(const ParticleSet& P, int first, int last,
-        const ParticleSet& source, int iat_src, GradMatrix& grad_phi,
+    evaluateGradSource(const ParticleSetT<T>& P, int first, int last,
+        const ParticleSetT<T>& source, int iat_src, GradMatrix& grad_phi,
         HessMatrix& grad_grad_phi, GradMatrix& grad_lapl_phi) override
     {
         Phi->evaluateGradSource(P, first, last, source, iat_src, grad_phi,
             grad_grad_phi, grad_lapl_phi);
     }
-
-    //  void evaluateThirdDeriv(const ParticleSet& P, int first, int last,
-    //  GGGMatrix& grad_grad_grad_logdet) {Phi->evaluateThridDeriv(P, first,
-    //  last, grad_grad_grad_logdet); }
 
     /// Use history list (false) or global rotation (true)
     void
@@ -402,35 +403,35 @@ public:
 
     void
     mw_evaluateDetRatios(const RefVectorWithLeader<SPOSetT<T>>& spo_list,
-        const RefVectorWithLeader<const VirtualParticleSet>& vp_list,
+        const RefVectorWithLeader<const VirtualParticleSetT<T>>& vp_list,
         const RefVector<ValueVector>& psi_list,
         const std::vector<const T*>& invRow_ptr_list,
         std::vector<std::vector<T>>& ratios_list) const override;
 
     void
     mw_evaluateValue(const RefVectorWithLeader<SPOSetT<T>>& spo_list,
-        const RefVectorWithLeader<ParticleSet>& P_list, int iat,
+        const RefVectorWithLeader<ParticleSetT<T>>& P_list, int iat,
         const RefVector<ValueVector>& psi_v_list) const override;
 
     void
     mw_evaluateVGL(const RefVectorWithLeader<SPOSetT<T>>& spo_list,
-        const RefVectorWithLeader<ParticleSet>& P_list, int iat,
+        const RefVectorWithLeader<ParticleSetT<T>>& P_list, int iat,
         const RefVector<ValueVector>& psi_v_list,
         const RefVector<GradVector>& dpsi_v_list,
         const RefVector<ValueVector>& d2psi_v_list) const override;
 
     void
     mw_evaluateVGLWithSpin(const RefVectorWithLeader<SPOSetT<T>>& spo_list,
-        const RefVectorWithLeader<ParticleSet>& P_list, int iat,
+        const RefVectorWithLeader<ParticleSetT<T>>& P_list, int iat,
         const RefVector<ValueVector>& psi_v_list,
         const RefVector<GradVector>& dpsi_v_list,
         const RefVector<ValueVector>& d2psi_v_list,
-        OffloadMatrix<QMCTraits::ComplexType>& mw_dspin) const override;
+        OffloadMatrix<ComplexType>& mw_dspin) const override;
 
     void
     mw_evaluateVGLandDetRatioGrads(
         const RefVectorWithLeader<SPOSetT<T>>& spo_list,
-        const RefVectorWithLeader<ParticleSet>& P_list, int iat,
+        const RefVectorWithLeader<ParticleSetT<T>>& P_list, int iat,
         const std::vector<const T*>& invRow_ptr_list,
         OffloadMWVGLArray& phi_vgl_v, std::vector<T>& ratios,
         std::vector<GradType>& grads) const override;
@@ -438,14 +439,14 @@ public:
     void
     mw_evaluateVGLandDetRatioGradsWithSpin(
         const RefVectorWithLeader<SPOSetT<T>>& spo_list,
-        const RefVectorWithLeader<ParticleSet>& P_list, int iat,
+        const RefVectorWithLeader<ParticleSetT<T>>& P_list, int iat,
         const std::vector<const T*>& invRow_ptr_list,
         OffloadMWVGLArray& phi_vgl_v, std::vector<T>& ratios,
         std::vector<GradType>& grads, std::vector<T>& spingrads) const override;
 
     void
     mw_evaluate_notranspose(const RefVectorWithLeader<SPOSetT<T>>& spo_list,
-        const RefVectorWithLeader<ParticleSet>& P_list, int first, int last,
+        const RefVectorWithLeader<ParticleSetT<T>>& P_list, int first, int last,
         const RefVector<ValueMatrix>& logdet_list,
         const RefVector<GradMatrix>& dlogdet_list,
         const RefVector<ValueMatrix>& d2logdet_list) const override;
@@ -469,7 +470,7 @@ private:
     std::vector<RealType> params;
 
     /// Full set of rotation matrix parameters for use in global rotation method
-    opt_variables_type myVarsFull;
+    OptVariablesType<T> myVarsFull;
 
     /// timer for apply_rotation
     NewTimer& apply_rotation_timer_;
@@ -483,9 +484,9 @@ private:
     /// Use global rotation or history list
     bool use_global_rot_ = true;
 
-    friend opt_variables_type&
+    friend OptVariablesType<double>&
     testing::getMyVarsFull(RotatedSPOsT<double>& rot);
-    friend opt_variables_type&
+    friend OptVariablesType<float>&
     testing::getMyVarsFull(RotatedSPOsT<float>& rot);
     friend std::vector<std::vector<double>>&
     testing::getHistoryParams(RotatedSPOsT<double>& rot);

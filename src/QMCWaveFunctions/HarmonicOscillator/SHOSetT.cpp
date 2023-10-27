@@ -90,7 +90,7 @@ SHOSetT<T>::report(const std::string& pad) const
 
 template <typename T>
 void
-SHOSetT<T>::evaluateValue(const ParticleSet& P, int iat, ValueVector& psi)
+SHOSetT<T>::evaluateValue(const ParticleSetT<T>& P, int iat, ValueVector& psi)
 {
     const PosType& r(P.activeR(iat));
     ValueVector p(&psi[0], this->size());
@@ -99,7 +99,7 @@ SHOSetT<T>::evaluateValue(const ParticleSet& P, int iat, ValueVector& psi)
 
 template <typename T>
 void
-SHOSetT<T>::evaluateVGL(const ParticleSet& P, int iat, ValueVector& psi,
+SHOSetT<T>::evaluateVGL(const ParticleSetT<T>& P, int iat, ValueVector& psi,
     GradVector& dpsi, ValueVector& d2psi)
 {
     const PosType& r(P.activeR(iat));
@@ -111,7 +111,7 @@ SHOSetT<T>::evaluateVGL(const ParticleSet& P, int iat, ValueVector& psi,
 
 template <typename T>
 void
-SHOSetT<T>::evaluate_notranspose(const ParticleSet& P, int first, int last,
+SHOSetT<T>::evaluate_notranspose(const ParticleSetT<T>& P, int first, int last,
     ValueMatrix& logdet, GradMatrix& dlogdet, ValueMatrix& d2logdet)
 {
     for (int iat = first, i = 0; iat < last; ++iat, ++i) {
@@ -347,8 +347,8 @@ SHOSetT<T>::test_derivatives()
 
     app_log() << "SHOSet::test_derivatives" << std::endl;
 
-    const SimulationCell simulation_cell;
-    ParticleSet Ps(simulation_cell);
+    const SimulationCellT<T> simulation_cell;
+    ParticleSetT<T> Ps(simulation_cell);
 
     int p = 0;
     PosType r, rtmp;
@@ -509,15 +509,15 @@ SHOSetT<T>::test_overlap()
 
 template <typename T>
 void
-SHOSetT<T>::evaluateThirdDeriv(
-    const ParticleSet& P, int first, int last, GGGMatrix& grad_grad_grad_logdet)
+SHOSetT<T>::evaluateThirdDeriv(const ParticleSetT<T>& P, int first, int last,
+    GGGMatrix& grad_grad_grad_logdet)
 {
     not_implemented("evaluateThirdDeriv(P,first,last,dddlogdet)");
 }
 
 template <typename T>
 void
-SHOSetT<T>::evaluate_notranspose(const ParticleSet& P, int first, int last,
+SHOSetT<T>::evaluate_notranspose(const ParticleSetT<T>& P, int first, int last,
     ValueMatrix& logdet, GradMatrix& dlogdet, HessMatrix& grad_grad_logdet)
 {
     not_implemented(
@@ -526,7 +526,7 @@ SHOSetT<T>::evaluate_notranspose(const ParticleSet& P, int first, int last,
 
 template <typename T>
 void
-SHOSetT<T>::evaluate_notranspose(const ParticleSet& P, int first, int last,
+SHOSetT<T>::evaluate_notranspose(const ParticleSetT<T>& P, int first, int last,
     ValueMatrix& logdet, GradMatrix& dlogdet, HessMatrix& grad_grad_logdet,
     GGGMatrix& grad_grad_grad_logdet)
 {
@@ -536,16 +536,16 @@ SHOSetT<T>::evaluate_notranspose(const ParticleSet& P, int first, int last,
 
 template <typename T>
 void
-SHOSetT<T>::evaluateGradSource(const ParticleSet& P, int first, int last,
-    const ParticleSet& source, int iat_src, GradMatrix& gradphi)
+SHOSetT<T>::evaluateGradSource(const ParticleSetT<T>& P, int first, int last,
+    const ParticleSetT<T>& source, int iat_src, GradMatrix& gradphi)
 {
     not_implemented("evaluateGradSource(P,first,last,source,iat,dphi)");
 }
 
 template <typename T>
 void
-SHOSetT<T>::evaluateGradSource(const ParticleSet& P, int first, int last,
-    const ParticleSet& source, int iat_src, GradMatrix& grad_phi,
+SHOSetT<T>::evaluateGradSource(const ParticleSetT<T>& P, int first, int last,
+    const ParticleSetT<T>& source, int iat_src, GradMatrix& grad_phi,
     HessMatrix& grad_grad_phi, GradMatrix& grad_lapl_phi)
 {
     not_implemented(

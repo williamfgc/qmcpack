@@ -85,7 +85,7 @@ public:
      * @param psi values of the SPO
      */
     void
-    evaluateValue(const ParticleSet& P, int iat, ValueVector& psi) override;
+    evaluateValue(const ParticleSetT<T>& P, int iat, ValueVector& psi) override;
 
     /** evaluate the values, gradients and laplacians of this single-particle
      * orbital set
@@ -96,7 +96,7 @@ public:
      * @param d2psi laplacians of the SPO
      */
     void
-    evaluateVGL(const ParticleSet& P, int iat, ValueVector& psi,
+    evaluateVGL(const ParticleSetT<T>& P, int iat, ValueVector& psi,
         GradVector& dpsi, ValueVector& d2psi) override;
 
     /** evaluate the values, gradients and laplacians of this single-particle
@@ -109,7 +109,7 @@ public:
      * @param dspin spin gradient of the SPO
      */
     void
-    evaluateVGL_spin(const ParticleSet& P, int iat, ValueVector& psi,
+    evaluateVGL_spin(const ParticleSetT<T>& P, int iat, ValueVector& psi,
         GradVector& dpsi, ValueVector& d2psi, ValueVector& dspin) override;
 
     /** evaluate the values, gradients and laplacians and spin gradient of this
@@ -125,7 +125,7 @@ public:
      */
     void
     mw_evaluateVGLWithSpin(const RefVectorWithLeader<SPOSetT<T>>& spo_list,
-        const RefVectorWithLeader<ParticleSet>& P_list, int iat,
+        const RefVectorWithLeader<ParticleSetT<T>>& P_list, int iat,
         const RefVector<ValueVector>& psi_v_list,
         const RefVector<GradVector>& dpsi_v_list,
         const RefVector<ValueVector>& d2psi_v_list,
@@ -146,7 +146,7 @@ public:
     void
     mw_evaluateVGLandDetRatioGradsWithSpin(
         const RefVectorWithLeader<SPOSetT<T>>& spo_list,
-        const RefVectorWithLeader<ParticleSet>& P_list, int iat,
+        const RefVectorWithLeader<ParticleSetT<T>>& P_list, int iat,
         const std::vector<const T*>& invRow_ptr_list,
         OffloadMWVGLArray& phi_vgl_v, std::vector<T>& ratios,
         std::vector<GradType>& grads, std::vector<T>& spingrads) const override;
@@ -162,19 +162,19 @@ public:
      *
      */
     void
-    evaluate_notranspose(const ParticleSet& P, int first, int last,
+    evaluate_notranspose(const ParticleSetT<T>& P, int first, int last,
         ValueMatrix& logdet, GradMatrix& dlogdet,
         ValueMatrix& d2logdet) override;
 
     void
     mw_evaluate_notranspose(const RefVectorWithLeader<SPOSetT<T>>& spo_list,
-        const RefVectorWithLeader<ParticleSet>& P_list, int first, int last,
+        const RefVectorWithLeader<ParticleSetT<T>>& P_list, int first, int last,
         const RefVector<ValueMatrix>& logdet_list,
         const RefVector<GradMatrix>& dlogdet_list,
         const RefVector<ValueMatrix>& d2logdet_list) const override;
 
     void
-    evaluate_notranspose_spin(const ParticleSet& P, int first, int last,
+    evaluate_notranspose_spin(const ParticleSetT<T>& P, int first, int last,
         ValueMatrix& logdet, GradMatrix& dlogdet, ValueMatrix& d2logdet,
         ValueMatrix& dspinlogdet) override;
     /** Evaluate the values, spin gradients, and spin laplacians of single
@@ -186,7 +186,7 @@ public:
      *
      */
     void
-    evaluate_spin(const ParticleSet& P, int iat, ValueVector& psi,
+    evaluate_spin(const ParticleSetT<T>& P, int iat, ValueVector& psi,
         ValueVector& dpsi) override;
 
     /** evaluate the gradients of this single-particle orbital
@@ -200,8 +200,9 @@ public:
      *
      */
     virtual void
-    evaluateGradSource(const ParticleSet& P, int first, int last,
-        const ParticleSet& source, int iat_src, GradMatrix& gradphi) override;
+    evaluateGradSource(const ParticleSetT<T>& P, int first, int last,
+        const ParticleSetT<T>& source, int iat_src,
+        GradMatrix& gradphi) override;
 
     std::unique_ptr<SPOSetT<T>>
     makeClone() const override;

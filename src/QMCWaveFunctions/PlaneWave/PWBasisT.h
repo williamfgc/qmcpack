@@ -23,7 +23,7 @@
 #include "CPU/e2iphi.h"
 #include "Configuration.h"
 #include "Message/Communicate.h"
-#include "Particle/ParticleSet.h"
+#include "Particle/ParticleSetT.h"
 #include "hdf/hdf_archive.h"
 #include "type_traits/complex_help.hpp"
 
@@ -48,7 +48,7 @@ public:
     using ComplexType = T;
     using PosType = TinyVector<RealType, DIM>;
     using IndexType = QMCTraits::IndexType;
-    using ParticleLayout = ParticleSet::ParticleLayout;
+    using ParticleLayout = typename ParticleSetT<T>::ParticleLayout;
     using GIndex_t = TinyVector<IndexType, 3>;
 
 private:
@@ -280,7 +280,7 @@ public:
      * evaluations.
      */
     inline void
-    evaluateAll(const ParticleSet& P, int iat)
+    evaluateAll(const ParticleSetT<T>& P, int iat)
     {
         const PosType& r(P.activeR(iat));
         BuildRecursionCoefs(r);
@@ -318,7 +318,7 @@ public:
         eval_e2iphi(NumPlaneWaves, phi.data(), Zv.data());
     }
     inline void
-    evaluateAll(const ParticleSet& P, int iat)
+    evaluateAll(const ParticleSetT<T>& P, int iat)
     {
         const PosType& r(P.activeR(iat));
         evaluate(r);

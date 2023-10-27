@@ -89,7 +89,8 @@ SpinorSetT<T>::setOrbitalSetSize(int norbs)
 
 template <class T>
 void
-SpinorSetT<T>::evaluateValue(const ParticleSet& P, int iat, ValueVector& psi)
+SpinorSetT<T>::evaluateValue(
+    const ParticleSetT<T>& P, int iat, ValueVector& psi)
 {
     psi_work_up = 0.0;
     psi_work_down = 0.0;
@@ -97,7 +98,7 @@ SpinorSetT<T>::evaluateValue(const ParticleSet& P, int iat, ValueVector& psi)
     spo_up->evaluateValue(P, iat, psi_work_up);
     spo_dn->evaluateValue(P, iat, psi_work_down);
 
-    ParticleSet::Scalar_t s = P.activeSpin(iat);
+    typename ParticleSetT<T>::Scalar_t s = P.activeSpin(iat);
 
     RealType coss(0.0), sins(0.0);
 
@@ -114,7 +115,7 @@ SpinorSetT<T>::evaluateValue(const ParticleSet& P, int iat, ValueVector& psi)
 
 template <class T>
 void
-SpinorSetT<T>::evaluateVGL(const ParticleSet& P, int iat, ValueVector& psi,
+SpinorSetT<T>::evaluateVGL(const ParticleSetT<T>& P, int iat, ValueVector& psi,
     GradVector& dpsi, ValueVector& d2psi)
 {
     psi_work_up = 0.0;
@@ -127,7 +128,7 @@ SpinorSetT<T>::evaluateVGL(const ParticleSet& P, int iat, ValueVector& psi,
     spo_up->evaluateVGL(P, iat, psi_work_up, dpsi_work_up, d2psi_work_up);
     spo_dn->evaluateVGL(P, iat, psi_work_down, dpsi_work_down, d2psi_work_down);
 
-    ParticleSet::Scalar_t s = P.activeSpin(iat);
+    typename ParticleSetT<T>::Scalar_t s = P.activeSpin(iat);
 
     RealType coss(0.0), sins(0.0);
 
@@ -144,8 +145,8 @@ SpinorSetT<T>::evaluateVGL(const ParticleSet& P, int iat, ValueVector& psi,
 
 template <class T>
 void
-SpinorSetT<T>::evaluateVGL_spin(const ParticleSet& P, int iat, ValueVector& psi,
-    GradVector& dpsi, ValueVector& d2psi, ValueVector& dspin)
+SpinorSetT<T>::evaluateVGL_spin(const ParticleSetT<T>& P, int iat,
+    ValueVector& psi, GradVector& dpsi, ValueVector& d2psi, ValueVector& dspin)
 {
     psi_work_up = 0.0;
     psi_work_down = 0.0;
@@ -157,7 +158,7 @@ SpinorSetT<T>::evaluateVGL_spin(const ParticleSet& P, int iat, ValueVector& psi,
     spo_up->evaluateVGL(P, iat, psi_work_up, dpsi_work_up, d2psi_work_up);
     spo_dn->evaluateVGL(P, iat, psi_work_down, dpsi_work_down, d2psi_work_down);
 
-    ParticleSet::Scalar_t s = P.activeSpin(iat);
+    typename ParticleSetT<T>::Scalar_t s = P.activeSpin(iat);
 
     RealType coss(0.0), sins(0.0);
 
@@ -178,7 +179,7 @@ template <class T>
 void
 SpinorSetT<T>::mw_evaluateVGLWithSpin(
     const RefVectorWithLeader<SPOSetT<T>>& spo_list,
-    const RefVectorWithLeader<ParticleSet>& P_list, int iat,
+    const RefVectorWithLeader<ParticleSetT<T>>& P_list, int iat,
     const RefVector<ValueVector>& psi_v_list,
     const RefVector<GradVector>& dpsi_v_list,
     const RefVector<ValueVector>& d2psi_v_list,
@@ -212,7 +213,7 @@ SpinorSetT<T>::mw_evaluateVGLWithSpin(
         dn_dpsi_v_list, dn_d2psi_v_list);
 
     for (int iw = 0; iw < nw; iw++) {
-        ParticleSet::Scalar_t s = P_list[iw].activeSpin(iat);
+        typename ParticleSetT<T>::Scalar_t s = P_list[iw].activeSpin(iat);
         RealType coss = std::cos(s);
         RealType sins = std::sin(s);
 
@@ -240,7 +241,7 @@ template <class T>
 void
 SpinorSetT<T>::mw_evaluateVGLandDetRatioGradsWithSpin(
     const RefVectorWithLeader<SPOSetT<T>>& spo_list,
-    const RefVectorWithLeader<ParticleSet>& P_list, int iat,
+    const RefVectorWithLeader<ParticleSetT<T>>& P_list, int iat,
     const std::vector<const T*>& invRow_ptr_list, OffloadMWVGLArray& phi_vgl_v,
     std::vector<T>& ratios, std::vector<GradType>& grads,
     std::vector<T>& spingrads) const
@@ -248,7 +249,7 @@ SpinorSetT<T>::mw_evaluateVGLandDetRatioGradsWithSpin(
     auto& spo_leader = spo_list.template getCastedLeader<SpinorSetT<T>>();
     auto& P_leader = P_list.getLeader();
     assert(this == &spo_leader);
-    assert(phi_vgl_v.size(0) == DIM_VGL);
+    assert(phi_vgl_v.size(0) == QMCTraits::DIM_VGL);
     assert(phi_vgl_v.size(1) == spo_list.size());
     const size_t nw = spo_list.size();
     const size_t norb_requested = phi_vgl_v.size(2);
@@ -279,7 +280,7 @@ SpinorSetT<T>::mw_evaluateVGLandDetRatioGradsWithSpin(
     dn_spo_leader.mw_evaluateVGLandDetRatioGrads(dn_spo_list, P_list, iat,
         invRow_ptr_list, dn_phi_vgl_v, dn_ratios, dn_grads);
     for (int iw = 0; iw < nw; iw++) {
-        ParticleSet::Scalar_t s = P_list[iw].activeSpin(iat);
+        typename ParticleSetT<T>::Scalar_t s = P_list[iw].activeSpin(iat);
         spins[iw] = s;
         RealType coss = std::cos(s);
         RealType sins = std::sin(s);
@@ -319,8 +320,8 @@ SpinorSetT<T>::mw_evaluateVGLandDetRatioGradsWithSpin(
 
 template <class T>
 void
-SpinorSetT<T>::evaluate_notranspose(const ParticleSet& P, int first, int last,
-    ValueMatrix& logdet, GradMatrix& dlogdet, ValueMatrix& d2logdet)
+SpinorSetT<T>::evaluate_notranspose(const ParticleSetT<T>& P, int first,
+    int last, ValueMatrix& logdet, GradMatrix& dlogdet, ValueMatrix& d2logdet)
 {
     IndexType nelec = P.getTotalNum();
 
@@ -339,7 +340,7 @@ SpinorSetT<T>::evaluate_notranspose(const ParticleSet& P, int first, int last,
         dlogpsi_work_down, d2logpsi_work_down);
 
     for (int iat = 0; iat < nelec; iat++) {
-        ParticleSet::Scalar_t s = P.activeSpin(iat);
+        typename ParticleSetT<T>::Scalar_t s = P.activeSpin(iat);
 
         RealType coss(0.0), sins(0.0);
 
@@ -364,7 +365,7 @@ template <class T>
 void
 SpinorSetT<T>::mw_evaluate_notranspose(
     const RefVectorWithLeader<SPOSetT<T>>& spo_list,
-    const RefVectorWithLeader<ParticleSet>& P_list, int first, int last,
+    const RefVectorWithLeader<ParticleSetT<T>>& P_list, int first, int last,
     const RefVector<ValueMatrix>& logdet_list,
     const RefVector<GradMatrix>& dlogdet_list,
     const RefVector<ValueMatrix>& d2logdet_list) const
@@ -426,7 +427,7 @@ SpinorSetT<T>::mw_evaluate_notranspose(
 
     for (int iw = 0; iw < nw; iw++)
         for (int iat = 0; iat < nelec; iat++) {
-            ParticleSet::Scalar_t s = P_list[iw].activeSpin(iat);
+            typename ParticleSetT<T>::Scalar_t s = P_list[iw].activeSpin(iat);
             RealType coss = std::cos(s);
             RealType sins = std::sin(s);
             T eis(coss, sins);
@@ -448,7 +449,7 @@ SpinorSetT<T>::mw_evaluate_notranspose(
 
 template <class T>
 void
-SpinorSetT<T>::evaluate_notranspose_spin(const ParticleSet& P, int first,
+SpinorSetT<T>::evaluate_notranspose_spin(const ParticleSetT<T>& P, int first,
     int last, ValueMatrix& logdet, GradMatrix& dlogdet, ValueMatrix& d2logdet,
     ValueMatrix& dspinlogdet)
 {
@@ -469,7 +470,7 @@ SpinorSetT<T>::evaluate_notranspose_spin(const ParticleSet& P, int first,
         dlogpsi_work_down, d2logpsi_work_down);
 
     for (int iat = 0; iat < nelec; iat++) {
-        ParticleSet::Scalar_t s = P.activeSpin(iat);
+        typename ParticleSetT<T>::Scalar_t s = P.activeSpin(iat);
 
         RealType coss(0.0), sins(0.0);
 
@@ -497,7 +498,7 @@ SpinorSetT<T>::evaluate_notranspose_spin(const ParticleSet& P, int first,
 template <class T>
 void
 SpinorSetT<T>::evaluate_spin(
-    const ParticleSet& P, int iat, ValueVector& psi, ValueVector& dpsi)
+    const ParticleSetT<T>& P, int iat, ValueVector& psi, ValueVector& dpsi)
 {
     psi_work_up = 0.0;
     psi_work_down = 0.0;
@@ -505,7 +506,7 @@ SpinorSetT<T>::evaluate_spin(
     spo_up->evaluateValue(P, iat, psi_work_up);
     spo_dn->evaluateValue(P, iat, psi_work_down);
 
-    ParticleSet::Scalar_t s = P.activeSpin(iat);
+    typename ParticleSetT<T>::Scalar_t s = P.activeSpin(iat);
 
     RealType coss(0.0), sins(0.0);
 
@@ -522,8 +523,8 @@ SpinorSetT<T>::evaluate_spin(
 
 template <class T>
 void
-SpinorSetT<T>::evaluateGradSource(const ParticleSet& P, int first, int last,
-    const ParticleSet& source, int iat_src, GradMatrix& gradphi)
+SpinorSetT<T>::evaluateGradSource(const ParticleSetT<T>& P, int first, int last,
+    const ParticleSetT<T>& source, int iat_src, GradMatrix& gradphi)
 {
     IndexType nelec = P.getTotalNum();
 
@@ -533,7 +534,7 @@ SpinorSetT<T>::evaluateGradSource(const ParticleSet& P, int first, int last,
     spo_dn->evaluateGradSource(P, first, last, source, iat_src, gradphi_dn);
 
     for (int iat = 0; iat < nelec; iat++) {
-        ParticleSet::Scalar_t s = P.activeSpin(iat);
+        typename ParticleSetT<T>::Scalar_t s = P.activeSpin(iat);
         RealType coss = std::cos(s);
         RealType sins = std::sin(s);
         T eis(coss, sins);

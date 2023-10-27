@@ -13,7 +13,7 @@
 #define QMCPLUSPLUS_SOA_LINEARCOMIBINATIONORBITALSET_WITH_CORRECTIONT_H
 
 #include "LCAOrbitalSetT.h"
-#include "QMCWaveFunctions/BasisSetBase.h"
+#include "QMCWaveFunctions/BasisSetBaseT.h"
 #include "QMCWaveFunctions/SPOSetT.h"
 #include "SoaCuspCorrectionT.h"
 
@@ -38,8 +38,9 @@ public:
      * @param bs pointer to the BasisSet
      * @param rl report level
      */
-    LCAOrbitalSetWithCorrectionT(const std::string& my_name, ParticleSet& ions,
-        ParticleSet& els, std::unique_ptr<basis_type>&& bs);
+    LCAOrbitalSetWithCorrectionT(const std::string& my_name,
+        ParticleSetT<T>& ions, ParticleSetT<T>& els,
+        std::unique_ptr<basis_type>&& bs);
 
     LCAOrbitalSetWithCorrectionT(
         const LCAOrbitalSetWithCorrectionT& in) = default;
@@ -57,17 +58,18 @@ public:
     setOrbitalSetSize(int norbs) final;
 
     void
-    evaluateValue(const ParticleSet& P, int iat, ValueVector& psi) final;
+    evaluateValue(const ParticleSetT<T>& P, int iat, ValueVector& psi) final;
 
     void
-    evaluateVGL(const ParticleSet& P, int iat, ValueVector& psi,
+    evaluateVGL(const ParticleSetT<T>& P, int iat, ValueVector& psi,
         GradVector& dpsi, ValueVector& d2psi) final;
 
     void
-    evaluate_notranspose(const ParticleSet& P, int first, int last,
+    evaluate_notranspose(const ParticleSetT<T>& P, int first, int last,
         ValueMatrix& logdet, GradMatrix& dlogdet, ValueMatrix& d2logdet) final;
 
-    friend class LCAOrbitalBuilder;
+    template <typename>
+    friend class LCAOrbitalBuilderT;
 
 private:
     LCAOrbitalSetT<T> lcao;

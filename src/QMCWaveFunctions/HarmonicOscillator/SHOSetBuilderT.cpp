@@ -23,7 +23,7 @@
 namespace qmcplusplus
 {
 template <class T>
-SHOSetBuilderT<T>::SHOSetBuilderT(ParticleSet& P, Communicate* comm) :
+SHOSetBuilderT<T>::SHOSetBuilderT(ParticleSetT<T>& P, Communicate* comm) :
     SPOSetBuilderT<T>("SHO", comm),
     Ps(P)
 {

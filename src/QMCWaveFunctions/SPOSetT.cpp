@@ -24,7 +24,7 @@
 
 #include "SPOSetT.h"
 
-#include "CPU/SIMD/simd.hpp" // simd::dot
+#include "CPU/SIMD/inner_product.hpp" // simd::dot
 
 namespace qmcplusplus
 {
@@ -38,7 +38,7 @@ SPOSetT<T>::SPOSetT(const std::string& my_name) :
 
 template <class T>
 void
-SPOSetT<T>::extractOptimizableObjectRefs(UniqueOptObjRefs&)
+SPOSetT<T>::extractOptimizableObjectRefs(UniqueOptObjRefsT<T>&)
 {
     if (isOptimizable())
         throw std::logic_error("Bug!! " + getClassName() +
@@ -48,7 +48,7 @@ SPOSetT<T>::extractOptimizableObjectRefs(UniqueOptObjRefs&)
 
 template <class T>
 void
-SPOSetT<T>::checkOutVariables(const opt_variables_type& active)
+SPOSetT<T>::checkOutVariables(const OptVariablesType<T>& active)
 {
     if (isOptimizable())
         throw std::logic_error("Bug!! " + getClassName() +
@@ -58,8 +58,8 @@ SPOSetT<T>::checkOutVariables(const opt_variables_type& active)
 
 template <class T>
 void
-SPOSetT<T>::evaluateDetRatios(const VirtualParticleSet& VP, ValueVector& psi,
-    const ValueVector& psiinv, std::vector<T>& ratios)
+SPOSetT<T>::evaluateDetRatios(const VirtualParticleSetT<T>& VP,
+    ValueVector& psi, const ValueVector& psiinv, std::vector<T>& ratios)
 {
     assert(psi.size() == psiinv.size());
     for (int iat = 0; iat < VP.getTotalNum(); ++iat) {
@@ -72,7 +72,7 @@ template <class T>
 void
 SPOSetT<T>::mw_evaluateDetRatios(
     const RefVectorWithLeader<SPOSetT<T>>& spo_list,
-    const RefVectorWithLeader<const VirtualParticleSet>& vp_list,
+    const RefVectorWithLeader<const VirtualParticleSetT<T>>& vp_list,
     const RefVector<ValueVector>& psi_list,
     const std::vector<const T*>& invRow_ptr_list,
     std::vector<std::vector<T>>& ratios_list) const
@@ -88,8 +88,8 @@ SPOSetT<T>::mw_evaluateDetRatios(
 
 template <class T>
 void
-SPOSetT<T>::evaluateVGL_spin(const ParticleSet& P, int iat, ValueVector& psi,
-    GradVector& dpsi, ValueVector& d2psi, ValueVector& dspin)
+SPOSetT<T>::evaluateVGL_spin(const ParticleSetT<T>& P, int iat,
+    ValueVector& psi, GradVector& dpsi, ValueVector& d2psi, ValueVector& dspin)
 {
     throw std::runtime_error("Need specialization of SPOSet::evaluateVGL_spin");
 }
@@ -97,7 +97,7 @@ SPOSetT<T>::evaluateVGL_spin(const ParticleSet& P, int iat, ValueVector& psi,
 template <class T>
 void
 SPOSetT<T>::mw_evaluateVGL(const RefVectorWithLeader<SPOSetT<T>>& spo_list,
-    const RefVectorWithLeader<ParticleSet>& P_list, int iat,
+    const RefVectorWithLeader<ParticleSetT<T>>& P_list, int iat,
     const RefVector<ValueVector>& psi_v_list,
     const RefVector<GradVector>& dpsi_v_list,
     const RefVector<ValueVector>& d2psi_v_list) const
@@ -111,7 +111,7 @@ SPOSetT<T>::mw_evaluateVGL(const RefVectorWithLeader<SPOSetT<T>>& spo_list,
 template <class T>
 void
 SPOSetT<T>::mw_evaluateValue(const RefVectorWithLeader<SPOSetT<T>>& spo_list,
-    const RefVectorWithLeader<ParticleSet>& P_list, int iat,
+    const RefVectorWithLeader<ParticleSetT<T>>& P_list, int iat,
     const RefVector<ValueVector>& psi_v_list) const
 {
     assert(this == &spo_list.getLeader());
@@ -123,7 +123,7 @@ template <class T>
 void
 SPOSetT<T>::mw_evaluateVGLWithSpin(
     const RefVectorWithLeader<SPOSetT<T>>& spo_list,
-    const RefVectorWithLeader<ParticleSet>& P_list, int iat,
+    const RefVectorWithLeader<ParticleSetT<T>>& P_list, int iat,
     const RefVector<ValueVector>& psi_v_list,
     const RefVector<GradVector>& dpsi_v_list,
     const RefVector<ValueVector>& d2psi_v_list,
@@ -137,7 +137,7 @@ template <class T>
 void
 SPOSetT<T>::mw_evaluateVGLandDetRatioGrads(
     const RefVectorWithLeader<SPOSetT<T>>& spo_list,
-    const RefVectorWithLeader<ParticleSet>& P_list, int iat,
+    const RefVectorWithLeader<ParticleSetT<T>>& P_list, int iat,
     const std::vector<const T*>& invRow_ptr_list, OffloadMWVGLArray& phi_vgl_v,
     std::vector<T>& ratios, std::vector<GradType>& grads) const
 {
@@ -172,7 +172,7 @@ template <class T>
 void
 SPOSetT<T>::mw_evaluateVGLandDetRatioGradsWithSpin(
     const RefVectorWithLeader<SPOSetT<T>>& spo_list,
-    const RefVectorWithLeader<ParticleSet>& P_list, int iat,
+    const RefVectorWithLeader<ParticleSetT<T>>& P_list, int iat,
     const std::vector<const T*>& invRow_ptr_list, OffloadMWVGLArray& phi_vgl_v,
     std::vector<T>& ratios, std::vector<GradType>& grads,
     std::vector<T>& spingrads) const
@@ -183,8 +183,8 @@ SPOSetT<T>::mw_evaluateVGLandDetRatioGradsWithSpin(
 
 template <class T>
 void
-SPOSetT<T>::evaluateThirdDeriv(
-    const ParticleSet& P, int first, int last, GGGMatrix& grad_grad_grad_logdet)
+SPOSetT<T>::evaluateThirdDeriv(const ParticleSetT<T>& P, int first, int last,
+    GGGMatrix& grad_grad_grad_logdet)
 {
     throw std::runtime_error(
         "Need specialization of SPOSet::evaluateThirdDeriv(). \n");
@@ -192,8 +192,8 @@ SPOSetT<T>::evaluateThirdDeriv(
 
 template <class T>
 void
-SPOSetT<T>::evaluate_notranspose_spin(const ParticleSet& P, int first, int last,
-    ValueMatrix& logdet, GradMatrix& dlogdet, ValueMatrix& d2logdet,
+SPOSetT<T>::evaluate_notranspose_spin(const ParticleSetT<T>& P, int first,
+    int last, ValueMatrix& logdet, GradMatrix& dlogdet, ValueMatrix& d2logdet,
     ValueMatrix& dspinlogdet)
 {
     throw std::runtime_error("Need specialization of " + getClassName() +
@@ -205,7 +205,7 @@ template <class T>
 void
 SPOSetT<T>::mw_evaluate_notranspose(
     const RefVectorWithLeader<SPOSetT<T>>& spo_list,
-    const RefVectorWithLeader<ParticleSet>& P_list, int first, int last,
+    const RefVectorWithLeader<ParticleSetT<T>>& P_list, int first, int last,
     const RefVector<ValueMatrix>& logdet_list,
     const RefVector<GradMatrix>& dlogdet_list,
     const RefVector<ValueMatrix>& d2logdet_list) const
@@ -218,7 +218,7 @@ SPOSetT<T>::mw_evaluate_notranspose(
 
 template <class T>
 void
-SPOSetT<T>::evaluate_notranspose(const ParticleSet& P, int first, int last,
+SPOSetT<T>::evaluate_notranspose(const ParticleSetT<T>& P, int first, int last,
     ValueMatrix& logdet, GradMatrix& dlogdet, HessMatrix& grad_grad_logdet)
 {
     throw std::runtime_error(
@@ -228,7 +228,7 @@ SPOSetT<T>::evaluate_notranspose(const ParticleSet& P, int first, int last,
 
 template <class T>
 void
-SPOSetT<T>::evaluate_notranspose(const ParticleSet& P, int first, int last,
+SPOSetT<T>::evaluate_notranspose(const ParticleSetT<T>& P, int first, int last,
     ValueMatrix& logdet, GradMatrix& dlogdet, HessMatrix& grad_grad_logdet,
     GGGMatrix& grad_grad_grad_logdet)
 {
@@ -257,7 +257,7 @@ SPOSetT<T>::basic_report(const std::string& pad) const
 
 template <class T>
 void
-SPOSetT<T>::evaluateVGH(const ParticleSet& P, int iat, ValueVector& psi,
+SPOSetT<T>::evaluateVGH(const ParticleSetT<T>& P, int iat, ValueVector& psi,
     GradVector& dpsi, HessVector& grad_grad_psi)
 {
     throw std::runtime_error("Need specialization of " + getClassName() +
@@ -266,7 +266,7 @@ SPOSetT<T>::evaluateVGH(const ParticleSet& P, int iat, ValueVector& psi,
 
 template <class T>
 void
-SPOSetT<T>::evaluateVGHGH(const ParticleSet& P, int iat, ValueVector& psi,
+SPOSetT<T>::evaluateVGHGH(const ParticleSetT<T>& P, int iat, ValueVector& psi,
     GradVector& dpsi, HessVector& grad_grad_psi, GGGVector& grad_grad_grad_psi)
 {
     throw std::runtime_error("Need specialization of " + getClassName() +
@@ -285,8 +285,8 @@ SPOSetT<T>::applyRotation(const ValueMatrix& rot_mat, bool use_stored_copy)
 
 template <class T>
 void
-SPOSetT<T>::evaluateDerivatives(ParticleSet& P,
-    const opt_variables_type& optvars, Vector<T>& dlogpsi,
+SPOSetT<T>::evaluateDerivatives(ParticleSetT<T>& P,
+    const OptVariablesType<T>& optvars, Vector<T>& dlogpsi,
     Vector<T>& dhpsioverpsi, const int& FirstIndex, const int& LastIndex)
 {
     if (isOptimizable())
@@ -297,8 +297,8 @@ SPOSetT<T>::evaluateDerivatives(ParticleSet& P,
 
 template <class T>
 void
-SPOSetT<T>::evaluateDerivativesWF(ParticleSet& P,
-    const opt_variables_type& optvars, Vector<T>& dlogpsi, int FirstIndex,
+SPOSetT<T>::evaluateDerivativesWF(ParticleSetT<T>& P,
+    const OptVariablesType<T>& optvars, Vector<T>& dlogpsi, int FirstIndex,
     int LastIndex)
 {
     if (isOptimizable())
@@ -309,8 +309,8 @@ SPOSetT<T>::evaluateDerivativesWF(ParticleSet& P,
 
 template <class T>
 void
-SPOSetT<T>::evaluateDerivRatios(const VirtualParticleSet& VP,
-    const opt_variables_type& optvars, ValueVector& psi,
+SPOSetT<T>::evaluateDerivRatios(const VirtualParticleSetT<T>& VP,
+    const OptVariablesType<T>& optvars, ValueVector& psi,
     const ValueVector& psiinv, std::vector<T>& ratios, Matrix<T>& dratios,
     int FirstIndex, int LastIndex)
 {
@@ -326,8 +326,8 @@ SPOSetT<T>::evaluateDerivRatios(const VirtualParticleSet& VP,
 
 template <class T>
 void
-SPOSetT<T>::evaluateDerivatives(ParticleSet& P,
-    const opt_variables_type& optvars, Vector<T>& dlogpsi,
+SPOSetT<T>::evaluateDerivatives(ParticleSetT<T>& P,
+    const OptVariablesType<T>& optvars, Vector<T>& dlogpsi,
     Vector<T>& dhpsioverpsi, const T& psiCurrent, const std::vector<T>& Coeff,
     const std::vector<size_t>& C2node_up, const std::vector<size_t>& C2node_dn,
     const ValueVector& detValues_up, const ValueVector& detValues_dn,
@@ -348,9 +348,9 @@ SPOSetT<T>::evaluateDerivatives(ParticleSet& P,
 
 template <class T>
 void
-SPOSetT<T>::evaluateDerivativesWF(ParticleSet& P,
-    const opt_variables_type& optvars, Vector<T>& dlogpsi,
-    const typename QTFull::ValueType& psiCurrent, const std::vector<T>& Coeff,
+SPOSetT<T>::evaluateDerivativesWF(ParticleSetT<T>& P,
+    const OptVariablesType<T>& optvars, Vector<ValueType>& dlogpsi,
+    const ValueType& psiCurrent, const std::vector<T>& Coeff,
     const std::vector<size_t>& C2node_up, const std::vector<size_t>& C2node_dn,
     const ValueVector& detValues_up, const ValueVector& detValues_dn,
     const ValueMatrix& M_up, const ValueMatrix& M_dn,
@@ -366,8 +366,8 @@ SPOSetT<T>::evaluateDerivativesWF(ParticleSet& P,
 
 template <class T>
 void
-SPOSetT<T>::evaluateGradSource(const ParticleSet& P, int first, int last,
-    const ParticleSet& source, int iat_src, GradMatrix& gradphi)
+SPOSetT<T>::evaluateGradSource(const ParticleSetT<T>& P, int first, int last,
+    const ParticleSetT<T>& source, int iat_src, GradMatrix& gradphi)
 {
     if (hasIonDerivs())
         throw std::logic_error("Bug!! " + getClassName() +
@@ -377,8 +377,8 @@ SPOSetT<T>::evaluateGradSource(const ParticleSet& P, int first, int last,
 
 template <class T>
 void
-SPOSetT<T>::evaluateGradSource(const ParticleSet& P, int first, int last,
-    const ParticleSet& source, int iat_src, GradMatrix& grad_phi,
+SPOSetT<T>::evaluateGradSource(const ParticleSetT<T>& P, int first, int last,
+    const ParticleSetT<T>& source, int iat_src, GradMatrix& grad_phi,
     HessMatrix& grad_grad_phi, GradMatrix& grad_lapl_phi)
 {
     if (hasIonDerivs())
@@ -389,8 +389,8 @@ SPOSetT<T>::evaluateGradSource(const ParticleSet& P, int first, int last,
 
 template <class T>
 void
-SPOSetT<T>::evaluateGradSourceRow(const ParticleSet& P, int iel,
-    const ParticleSet& source, int iat_src, GradVector& gradphi)
+SPOSetT<T>::evaluateGradSourceRow(const ParticleSetT<T>& P, int iel,
+    const ParticleSetT<T>& source, int iat_src, GradVector& gradphi)
 {
     if (hasIonDerivs())
         throw std::logic_error("Bug!! " + getClassName() +
@@ -401,7 +401,7 @@ SPOSetT<T>::evaluateGradSourceRow(const ParticleSet& P, int iel,
 template <class T>
 void
 SPOSetT<T>::evaluate_spin(
-    const ParticleSet& P, int iat, ValueVector& psi, ValueVector& dpsi)
+    const ParticleSetT<T>& P, int iat, ValueVector& psi, ValueVector& dpsi)
 {
     throw std::runtime_error("Need specialization of " + getClassName() +
         "::evaluate_spin(P,iat,psi,dpsi) (vector quantities)\n");

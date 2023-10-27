@@ -45,8 +45,8 @@ public:
   using vgh_type          = typename BaseType::vgh_type;
   using vghgh_type        = typename BaseType::vghgh_type;
   using PosType           = typename ParticleSet::PosType;
-  using OffloadMWVGLArray = Array<ValueType, 3, OffloadPinnedAllocator<ValueType>>; // [VGL, walker, Orbs]
-  using OffloadMWVArray   = Array<ValueType, 2, OffloadPinnedAllocator<ValueType>>; // [walker, Orbs]
+  using OffloadMWVGLArray = typename BaseType::OffloadMWVGLArray;
+  using OffloadMWVArray   = typename BaseType::OffloadMWVArray;
 
   using BaseType::BasisSetSize;
 
@@ -91,7 +91,7 @@ public:
   */
   void setPBCParams(const TinyVector<int, 3>& PBCImages,
                     const TinyVector<double, 3> Sup_Twist,
-                    const std::vector<QMCTraits::ValueType>& phase_factor);
+                    const std::vector<ORBT>& phase_factor);
 
   /** set BasisSetSize and allocate mVGL container
    */
@@ -115,6 +115,13 @@ public:
    * @param v   Array(n_walkers, BasisSetSize)
    */
   void mw_evaluateValue(const RefVectorWithLeader<ParticleSet>& P_list, int iat, OffloadMWVArray& v) override;
+
+  /** compute V using packed array with all walkers 
+   * @param vp_list list of quantum virtual particleset (one for each walker)
+   * @param v   Array(n_walkers, BasisSetSize)
+   */
+  void mw_evaluateValueVPs(const RefVectorWithLeader<const VirtualParticleSet>& vp_list, OffloadMWVArray& v) override;
+
 
   /** compute VGL using packed array with all walkers 
    * @param P_list list of quantum particleset (one for each walker)

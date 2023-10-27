@@ -103,7 +103,8 @@ PWOrbitalSetT<T>::addVector(const std::vector<RealType>& coefs, int jorb)
 
 template <class T>
 void
-PWOrbitalSetT<T>::evaluateValue(const ParticleSet& P, int iat, ValueVector& psi)
+PWOrbitalSetT<T>::evaluateValue(
+    const ParticleSetT<T>& P, int iat, ValueVector& psi)
 {
     // Evaluate every orbital for particle iat.
     // Evaluate the basis-set at these coordinates:
@@ -114,8 +115,8 @@ PWOrbitalSetT<T>::evaluateValue(const ParticleSet& P, int iat, ValueVector& psi)
 
 template <class T>
 void
-PWOrbitalSetT<T>::evaluateVGL(const ParticleSet& P, int iat, ValueVector& psi,
-    GradVector& dpsi, ValueVector& d2psi)
+PWOrbitalSetT<T>::evaluateVGL(const ParticleSetT<T>& P, int iat,
+    ValueVector& psi, GradVector& dpsi, ValueVector& d2psi)
 {
     // Evaluate the orbitals and derivatives for particle iat only.
     myBasisSet->evaluateAll(P, iat);
@@ -130,7 +131,7 @@ PWOrbitalSetT<T>::evaluateVGL(const ParticleSet& P, int iat, ValueVector& psi,
 
 template <class T>
 void
-PWOrbitalSetT<T>::evaluate_notranspose(const ParticleSet& P, int first,
+PWOrbitalSetT<T>::evaluate_notranspose(const ParticleSetT<T>& P, int first,
     int last, ValueMatrix& logdet, GradMatrix& dlogdet, ValueMatrix& d2logdet)
 {
     for (int iat = first, i = 0; iat < last; iat++, i++) {

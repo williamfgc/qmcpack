@@ -119,7 +119,7 @@ public:
     }
 
     void
-    evaluate_notranspose(const ParticleSet& P, int first, int last,
+    evaluate_notranspose(const ParticleSetT<T>& P, int first, int last,
         ValueMatrix& logdet, GradMatrix& dlogdet,
         ValueMatrix& d2logdet) override
     {
@@ -133,7 +133,7 @@ public:
 
     void
     mw_evaluate_notranspose(const RefVectorWithLeader<SPOSetT<T>>& spo_list,
-        const RefVectorWithLeader<ParticleSet>& P_list, int first, int last,
+        const RefVectorWithLeader<ParticleSetT<T>>& P_list, int first, int last,
         const RefVector<ValueMatrix>& logdet_list,
         const RefVector<GradMatrix>& dlogdet_list,
         const RefVector<ValueMatrix>& d2logdet_list) const override
@@ -179,7 +179,7 @@ public:
     }
 
     void
-    evaluate_notranspose(const ParticleSet& P, int first, int last,
+    evaluate_notranspose(const ParticleSetT<T>& P, int first, int last,
         ValueMatrix& logdet, GradMatrix& dlogdet,
         HessMatrix& grad_grad_logdet) override
     {
@@ -192,7 +192,7 @@ public:
     }
 
     void
-    evaluate_notranspose(const ParticleSet& P, int first, int last,
+    evaluate_notranspose(const ParticleSetT<T>& P, int first, int last,
         ValueMatrix& logdet, GradMatrix& dlogdet, HessMatrix& grad_grad_logdet,
         GGGMatrix& grad_grad_grad_logdet) override
     {
@@ -207,16 +207,17 @@ public:
     }
 
     void
-    evaluateGradSource(const ParticleSet& P, int first, int last,
-        const ParticleSet& source, int iat_src, GradMatrix& gradphi) override
+    evaluateGradSource(const ParticleSetT<T>& P, int first, int last,
+        const ParticleSetT<T>& source, int iat_src,
+        GradMatrix& gradphi) override
     {
         // Do nothing, since Einsplines don't explicitly depend on ion
         // positions.
     }
 
     void
-    evaluateGradSource(const ParticleSet& P, int first, int last,
-        const ParticleSet& source, int iat_src, GradMatrix& grad_phi,
+    evaluateGradSource(const ParticleSetT<T>& P, int first, int last,
+        const ParticleSetT<T>& source, int iat_src, GradMatrix& grad_phi,
         HessMatrix& grad_grad_phi, GradMatrix& grad_lapl_phi) override
     {
         // Do nothing, since Einsplines don't explicitly depend on ion
@@ -251,6 +252,9 @@ protected:
     /// band offsets used for communication
     std::vector<int> offset;
 };
+
+
+
 
 } // namespace qmcplusplus
 #endif

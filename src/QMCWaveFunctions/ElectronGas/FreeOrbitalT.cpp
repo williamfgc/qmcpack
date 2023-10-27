@@ -27,61 +27,62 @@ namespace qmcplusplus
 
 template <class T>
 void
-FreeOrbitalT<T>::evaluateVGL(const ParticleSet& P, int iat, ValueVector& pvec,
+FreeOrbitalT<T>::evaluateVGL(const ParticleSetT<T>& P, int iat,
+    ValueVector& pvec, GradVector& dpvec, ValueVector& d2pvec)
+{
+}
+
+template <>
+void
+FreeOrbitalT<float>::evaluateVGL(const ParticleSetT<float>& P, int iat,
+    ValueVector& pvec, GradVector& dpvec, ValueVector& d2pvec)
+{
+    const PosType& r = P.activeR(iat);
+    RealType sinkr, coskr;
+    for (int ik = mink; ik < maxk; ik++) {
+        sincos(dot(kvecs[ik], r), &sinkr, &coskr);
+        const int j2 = 2 * ik;
+        const int j1 = j2 - 1;
+        pvec[j1] = coskr;
+        pvec[j2] = sinkr;
+        dpvec[j1] = -sinkr * kvecs[ik];
+        dpvec[j2] = coskr * kvecs[ik];
+        d2pvec[j1] = k2neg[ik] * coskr;
+        d2pvec[j2] = k2neg[ik] * sinkr;
+    }
+    pvec[0] = 1.0;
+    dpvec[0] = 0.0;
+    d2pvec[0] = 0.0;
+}
+
+template <>
+void
+FreeOrbitalT<double>::evaluateVGL(const ParticleSetT<double>& P, int iat,
+    ValueVector& pvec, GradVector& dpvec, ValueVector& d2pvec)
+{
+    const PosType& r = P.activeR(iat);
+    RealType sinkr, coskr;
+    for (int ik = mink; ik < maxk; ik++) {
+        sincos(dot(kvecs[ik], r), &sinkr, &coskr);
+        const int j2 = 2 * ik;
+        const int j1 = j2 - 1;
+        pvec[j1] = coskr;
+        pvec[j2] = sinkr;
+        dpvec[j1] = -sinkr * kvecs[ik];
+        dpvec[j2] = coskr * kvecs[ik];
+        d2pvec[j1] = k2neg[ik] * coskr;
+        d2pvec[j2] = k2neg[ik] * sinkr;
+    }
+    pvec[0] = 1.0;
+    dpvec[0] = 0.0;
+    d2pvec[0] = 0.0;
+}
+
+template <>
+void
+FreeOrbitalT<std::complex<float>>::evaluateVGL(
+    const ParticleSetT<std::complex<float>>& P, int iat, ValueVector& pvec,
     GradVector& dpvec, ValueVector& d2pvec)
-{
-}
-
-template <>
-void
-FreeOrbitalT<float>::evaluateVGL(const ParticleSet& P, int iat,
-    ValueVector& pvec, GradVector& dpvec, ValueVector& d2pvec)
-{
-    const PosType& r = P.activeR(iat);
-    RealType sinkr, coskr;
-    for (int ik = mink; ik < maxk; ik++) {
-        sincos(dot(kvecs[ik], r), &sinkr, &coskr);
-        const int j2 = 2 * ik;
-        const int j1 = j2 - 1;
-        pvec[j1] = coskr;
-        pvec[j2] = sinkr;
-        dpvec[j1] = -sinkr * kvecs[ik];
-        dpvec[j2] = coskr * kvecs[ik];
-        d2pvec[j1] = k2neg[ik] * coskr;
-        d2pvec[j2] = k2neg[ik] * sinkr;
-    }
-    pvec[0] = 1.0;
-    dpvec[0] = 0.0;
-    d2pvec[0] = 0.0;
-}
-
-template <>
-void
-FreeOrbitalT<double>::evaluateVGL(const ParticleSet& P, int iat,
-    ValueVector& pvec, GradVector& dpvec, ValueVector& d2pvec)
-{
-    const PosType& r = P.activeR(iat);
-    RealType sinkr, coskr;
-    for (int ik = mink; ik < maxk; ik++) {
-        sincos(dot(kvecs[ik], r), &sinkr, &coskr);
-        const int j2 = 2 * ik;
-        const int j1 = j2 - 1;
-        pvec[j1] = coskr;
-        pvec[j2] = sinkr;
-        dpvec[j1] = -sinkr * kvecs[ik];
-        dpvec[j2] = coskr * kvecs[ik];
-        d2pvec[j1] = k2neg[ik] * coskr;
-        d2pvec[j2] = k2neg[ik] * sinkr;
-    }
-    pvec[0] = 1.0;
-    dpvec[0] = 0.0;
-    d2pvec[0] = 0.0;
-}
-
-template <>
-void
-FreeOrbitalT<std::complex<float>>::evaluateVGL(const ParticleSet& P, int iat,
-    ValueVector& pvec, GradVector& dpvec, ValueVector& d2pvec)
 {
     const PosType& r = P.activeR(iat);
     RealType sinkr, coskr;
@@ -96,8 +97,9 @@ FreeOrbitalT<std::complex<float>>::evaluateVGL(const ParticleSet& P, int iat,
 
 template <>
 void
-FreeOrbitalT<std::complex<double>>::evaluateVGL(const ParticleSet& P, int iat,
-    ValueVector& pvec, GradVector& dpvec, ValueVector& d2pvec)
+FreeOrbitalT<std::complex<double>>::evaluateVGL(
+    const ParticleSetT<std::complex<double>>& P, int iat, ValueVector& pvec,
+    GradVector& dpvec, ValueVector& d2pvec)
 {
     const PosType& r = P.activeR(iat);
     RealType sinkr, coskr;
@@ -113,7 +115,7 @@ FreeOrbitalT<std::complex<double>>::evaluateVGL(const ParticleSet& P, int iat,
 template <>
 void
 FreeOrbitalT<float>::evaluateValue(
-    const ParticleSet& P, int iat, ValueVector& pvec)
+    const ParticleSetT<float>& P, int iat, ValueVector& pvec)
 {
     const PosType& r = P.activeR(iat);
     RealType sinkr, coskr;
@@ -130,7 +132,7 @@ FreeOrbitalT<float>::evaluateValue(
 template <>
 void
 FreeOrbitalT<double>::evaluateValue(
-    const ParticleSet& P, int iat, ValueVector& pvec)
+    const ParticleSetT<double>& P, int iat, ValueVector& pvec)
 {
     const PosType& r = P.activeR(iat);
     RealType sinkr, coskr;
@@ -147,7 +149,7 @@ FreeOrbitalT<double>::evaluateValue(
 template <>
 void
 FreeOrbitalT<std::complex<float>>::evaluateValue(
-    const ParticleSet& P, int iat, ValueVector& pvec)
+    const ParticleSetT<std::complex<float>>& P, int iat, ValueVector& pvec)
 {
     const PosType& r = P.activeR(iat);
     RealType sinkr, coskr;
@@ -165,7 +167,7 @@ FreeOrbitalT<std::complex<float>>::evaluateValue(
 template <>
 void
 FreeOrbitalT<std::complex<double>>::evaluateValue(
-    const ParticleSet& P, int iat, ValueVector& pvec)
+    const ParticleSetT<std::complex<double>>& P, int iat, ValueVector& pvec)
 {
     const PosType& r = P.activeR(iat);
     RealType sinkr, coskr;
@@ -182,15 +184,16 @@ FreeOrbitalT<std::complex<double>>::evaluateValue(
 
 template <class T>
 void
-FreeOrbitalT<T>::evaluate_notranspose(const ParticleSet& P, int first, int last,
-    ValueMatrix& phi, GradMatrix& dphi, HessMatrix& d2phi_mat)
+FreeOrbitalT<T>::evaluate_notranspose(const ParticleSetT<T>& P, int first,
+    int last, ValueMatrix& phi, GradMatrix& dphi, HessMatrix& d2phi_mat)
 {
 }
 
 template <>
 void
-FreeOrbitalT<float>::evaluate_notranspose(const ParticleSet& P, int first,
-    int last, ValueMatrix& phi, GradMatrix& dphi, HessMatrix& d2phi_mat)
+FreeOrbitalT<float>::evaluate_notranspose(const ParticleSetT<float>& P,
+    int first, int last, ValueMatrix& phi, GradMatrix& dphi,
+    HessMatrix& d2phi_mat)
 {
     RealType sinkr, coskr;
     float phi_of_r;
@@ -229,8 +232,9 @@ FreeOrbitalT<float>::evaluate_notranspose(const ParticleSet& P, int first,
 
 template <>
 void
-FreeOrbitalT<double>::evaluate_notranspose(const ParticleSet& P, int first,
-    int last, ValueMatrix& phi, GradMatrix& dphi, HessMatrix& d2phi_mat)
+FreeOrbitalT<double>::evaluate_notranspose(const ParticleSetT<double>& P,
+    int first, int last, ValueMatrix& phi, GradMatrix& dphi,
+    HessMatrix& d2phi_mat)
 {
     RealType sinkr, coskr;
     double phi_of_r;
@@ -269,9 +273,9 @@ FreeOrbitalT<double>::evaluate_notranspose(const ParticleSet& P, int first,
 
 template <>
 void
-FreeOrbitalT<std::complex<float>>::evaluate_notranspose(const ParticleSet& P,
-    int first, int last, ValueMatrix& phi, GradMatrix& dphi,
-    HessMatrix& d2phi_mat)
+FreeOrbitalT<std::complex<float>>::evaluate_notranspose(
+    const ParticleSetT<std::complex<float>>& P, int first, int last,
+    ValueMatrix& phi, GradMatrix& dphi, HessMatrix& d2phi_mat)
 {
     RealType sinkr, coskr;
     std::complex<float> phi_of_r;
@@ -303,9 +307,9 @@ FreeOrbitalT<std::complex<float>>::evaluate_notranspose(const ParticleSet& P,
 
 template <>
 void
-FreeOrbitalT<std::complex<double>>::evaluate_notranspose(const ParticleSet& P,
-    int first, int last, ValueMatrix& phi, GradMatrix& dphi,
-    HessMatrix& d2phi_mat)
+FreeOrbitalT<std::complex<double>>::evaluate_notranspose(
+    const ParticleSetT<std::complex<double>>& P, int first, int last,
+    ValueMatrix& phi, GradMatrix& dphi, HessMatrix& d2phi_mat)
 {
     RealType sinkr, coskr;
     std::complex<double> phi_of_r;
@@ -337,177 +341,178 @@ FreeOrbitalT<std::complex<double>>::evaluate_notranspose(const ParticleSet& P,
 
 template <class T>
 void
-FreeOrbitalT<T>::evaluate_notranspose(const ParticleSet& P, int first, int last,
-    ValueMatrix& phi, GradMatrix& dphi, HessMatrix& d2phi_mat,
-    GGGMatrix& d3phi_mat)
-{
-}
-
-template <>
-void
-FreeOrbitalT<float>::evaluate_notranspose(const ParticleSet& P, int first,
+FreeOrbitalT<T>::evaluate_notranspose(const ParticleSetT<T>& P, int first,
     int last, ValueMatrix& phi, GradMatrix& dphi, HessMatrix& d2phi_mat,
     GGGMatrix& d3phi_mat)
 {
-    RealType sinkr, coskr;
-    ValueType phi_of_r;
-    for (int iat = first, i = 0; iat < last; iat++, i++) {
-        ValueVector p(phi[i], OrbitalSetSize);
-        GradVector dp(dphi[i], OrbitalSetSize);
-        HessVector hess(d2phi_mat[i], OrbitalSetSize);
-        GGGVector ggg(d3phi_mat[i], OrbitalSetSize);
-
-        const PosType& r = P.activeR(iat);
-        for (int ik = mink; ik < maxk; ik++) {
-            sincos(dot(kvecs[ik], r), &sinkr, &coskr);
-            const int j2 = 2 * ik;
-            const int j1 = j2 - 1;
-            p[j1] = coskr;
-            p[j2] = sinkr;
-            dp[j1] = -sinkr * kvecs[ik];
-            dp[j2] = coskr * kvecs[ik];
-            for (int la = 0; la < OHMMS_DIM; la++) {
-                hess[j1](la, la) = -coskr * (kvecs[ik])[la] * (kvecs[ik])[la];
-                hess[j2](la, la) = -sinkr * (kvecs[ik])[la] * (kvecs[ik])[la];
-                ggg[j1][la](la, la) =
-                    sinkr * (kvecs[ik])[la] * (kvecs[ik])[la] * (kvecs[ik])[la];
-                ggg[j2][la](la, la) = -coskr * (kvecs[ik])[la] *
-                    (kvecs[ik])[la] * (kvecs[ik])[la];
-                for (int lb = la + 1; lb < OHMMS_DIM; lb++) {
-                    hess[j1](la, lb) =
-                        -coskr * (kvecs[ik])[la] * (kvecs[ik])[lb];
-                    hess[j2](la, lb) =
-                        -sinkr * (kvecs[ik])[la] * (kvecs[ik])[lb];
-                    hess[j1](lb, la) = hess[j1](la, lb);
-                    hess[j2](lb, la) = hess[j2](la, lb);
-                    ggg[j1][la](lb, la) = sinkr * (kvecs[ik])[la] *
-                        (kvecs[ik])[lb] * (kvecs[ik])[la];
-                    ggg[j2][la](lb, la) = -coskr * (kvecs[ik])[la] *
-                        (kvecs[ik])[lb] * (kvecs[ik])[la];
-                    ggg[j1][la](la, lb) = ggg[j1][la](lb, la);
-                    ggg[j2][la](la, lb) = ggg[j2][la](lb, la);
-                    ggg[j1][lb](la, la) = ggg[j1][la](lb, la);
-                    ggg[j2][lb](la, la) = ggg[j2][la](lb, la);
-                    ggg[j1][la](lb, lb) = sinkr * (kvecs[ik])[la] *
-                        (kvecs[ik])[lb] * (kvecs[ik])[lb];
-                    ggg[j2][la](lb, lb) = -coskr * (kvecs[ik])[la] *
-                        (kvecs[ik])[lb] * (kvecs[ik])[lb];
-                    ggg[j1][lb](la, lb) = ggg[j1][la](lb, lb);
-                    ggg[j2][lb](la, lb) = ggg[j2][la](lb, lb);
-                    ggg[j1][lb](lb, la) = ggg[j1][la](lb, lb);
-                    ggg[j2][lb](lb, la) = ggg[j2][la](lb, lb);
-                    for (int lc = lb + 1; lc < OHMMS_DIM; lc++) {
-                        ggg[j1][la](lb, lc) = sinkr * (kvecs[ik])[la] *
-                            (kvecs[ik])[lb] * (kvecs[ik])[lc];
-                        ggg[j2][la](lb, lc) = -coskr * (kvecs[ik])[la] *
-                            (kvecs[ik])[lb] * (kvecs[ik])[lc];
-                        ggg[j1][la](lc, lb) = ggg[j1][la](lb, lc);
-                        ggg[j2][la](lc, lb) = ggg[j2][la](lb, lc);
-                        ggg[j1][lb](la, lc) = ggg[j1][la](lb, lc);
-                        ggg[j2][lb](la, lc) = ggg[j2][la](lb, lc);
-                        ggg[j1][lb](lc, la) = ggg[j1][la](lb, lc);
-                        ggg[j2][lb](lc, la) = ggg[j2][la](lb, lc);
-                        ggg[j1][lc](la, lb) = ggg[j1][la](lb, lc);
-                        ggg[j2][lc](la, lb) = ggg[j2][la](lb, lc);
-                        ggg[j1][lc](lb, la) = ggg[j1][la](lb, lc);
-                        ggg[j2][lc](lb, la) = ggg[j2][la](lb, lc);
-                    }
-                }
-            }
-        }
-
-        p[0] = 1.0;
-        dp[0] = 0.0;
-        hess[0] = 0.0;
-        ggg[0] = 0.0;
-    }
 }
 
 template <>
 void
-FreeOrbitalT<double>::evaluate_notranspose(const ParticleSet& P, int first,
-    int last, ValueMatrix& phi, GradMatrix& dphi, HessMatrix& d2phi_mat,
-    GGGMatrix& d3phi_mat)
-{
-    RealType sinkr, coskr;
-    ValueType phi_of_r;
-    for (int iat = first, i = 0; iat < last; iat++, i++) {
-        ValueVector p(phi[i], OrbitalSetSize);
-        GradVector dp(dphi[i], OrbitalSetSize);
-        HessVector hess(d2phi_mat[i], OrbitalSetSize);
-        GGGVector ggg(d3phi_mat[i], OrbitalSetSize);
-
-        const PosType& r = P.activeR(iat);
-        for (int ik = mink; ik < maxk; ik++) {
-            sincos(dot(kvecs[ik], r), &sinkr, &coskr);
-            const int j2 = 2 * ik;
-            const int j1 = j2 - 1;
-            p[j1] = coskr;
-            p[j2] = sinkr;
-            dp[j1] = -sinkr * kvecs[ik];
-            dp[j2] = coskr * kvecs[ik];
-            for (int la = 0; la < OHMMS_DIM; la++) {
-                hess[j1](la, la) = -coskr * (kvecs[ik])[la] * (kvecs[ik])[la];
-                hess[j2](la, la) = -sinkr * (kvecs[ik])[la] * (kvecs[ik])[la];
-                ggg[j1][la](la, la) =
-                    sinkr * (kvecs[ik])[la] * (kvecs[ik])[la] * (kvecs[ik])[la];
-                ggg[j2][la](la, la) = -coskr * (kvecs[ik])[la] *
-                    (kvecs[ik])[la] * (kvecs[ik])[la];
-                for (int lb = la + 1; lb < OHMMS_DIM; lb++) {
-                    hess[j1](la, lb) =
-                        -coskr * (kvecs[ik])[la] * (kvecs[ik])[lb];
-                    hess[j2](la, lb) =
-                        -sinkr * (kvecs[ik])[la] * (kvecs[ik])[lb];
-                    hess[j1](lb, la) = hess[j1](la, lb);
-                    hess[j2](lb, la) = hess[j2](la, lb);
-                    ggg[j1][la](lb, la) = sinkr * (kvecs[ik])[la] *
-                        (kvecs[ik])[lb] * (kvecs[ik])[la];
-                    ggg[j2][la](lb, la) = -coskr * (kvecs[ik])[la] *
-                        (kvecs[ik])[lb] * (kvecs[ik])[la];
-                    ggg[j1][la](la, lb) = ggg[j1][la](lb, la);
-                    ggg[j2][la](la, lb) = ggg[j2][la](lb, la);
-                    ggg[j1][lb](la, la) = ggg[j1][la](lb, la);
-                    ggg[j2][lb](la, la) = ggg[j2][la](lb, la);
-                    ggg[j1][la](lb, lb) = sinkr * (kvecs[ik])[la] *
-                        (kvecs[ik])[lb] * (kvecs[ik])[lb];
-                    ggg[j2][la](lb, lb) = -coskr * (kvecs[ik])[la] *
-                        (kvecs[ik])[lb] * (kvecs[ik])[lb];
-                    ggg[j1][lb](la, lb) = ggg[j1][la](lb, lb);
-                    ggg[j2][lb](la, lb) = ggg[j2][la](lb, lb);
-                    ggg[j1][lb](lb, la) = ggg[j1][la](lb, lb);
-                    ggg[j2][lb](lb, la) = ggg[j2][la](lb, lb);
-                    for (int lc = lb + 1; lc < OHMMS_DIM; lc++) {
-                        ggg[j1][la](lb, lc) = sinkr * (kvecs[ik])[la] *
-                            (kvecs[ik])[lb] * (kvecs[ik])[lc];
-                        ggg[j2][la](lb, lc) = -coskr * (kvecs[ik])[la] *
-                            (kvecs[ik])[lb] * (kvecs[ik])[lc];
-                        ggg[j1][la](lc, lb) = ggg[j1][la](lb, lc);
-                        ggg[j2][la](lc, lb) = ggg[j2][la](lb, lc);
-                        ggg[j1][lb](la, lc) = ggg[j1][la](lb, lc);
-                        ggg[j2][lb](la, lc) = ggg[j2][la](lb, lc);
-                        ggg[j1][lb](lc, la) = ggg[j1][la](lb, lc);
-                        ggg[j2][lb](lc, la) = ggg[j2][la](lb, lc);
-                        ggg[j1][lc](la, lb) = ggg[j1][la](lb, lc);
-                        ggg[j2][lc](la, lb) = ggg[j2][la](lb, lc);
-                        ggg[j1][lc](lb, la) = ggg[j1][la](lb, lc);
-                        ggg[j2][lc](lb, la) = ggg[j2][la](lb, lc);
-                    }
-                }
-            }
-        }
-
-        p[0] = 1.0;
-        dp[0] = 0.0;
-        hess[0] = 0.0;
-        ggg[0] = 0.0;
-    }
-}
-
-template <>
-void
-FreeOrbitalT<std::complex<float>>::evaluate_notranspose(const ParticleSet& P,
+FreeOrbitalT<float>::evaluate_notranspose(const ParticleSetT<float>& P,
     int first, int last, ValueMatrix& phi, GradMatrix& dphi,
     HessMatrix& d2phi_mat, GGGMatrix& d3phi_mat)
+{
+    RealType sinkr, coskr;
+    ValueType phi_of_r;
+    for (int iat = first, i = 0; iat < last; iat++, i++) {
+        ValueVector p(phi[i], OrbitalSetSize);
+        GradVector dp(dphi[i], OrbitalSetSize);
+        HessVector hess(d2phi_mat[i], OrbitalSetSize);
+        GGGVector ggg(d3phi_mat[i], OrbitalSetSize);
+
+        const PosType& r = P.activeR(iat);
+        for (int ik = mink; ik < maxk; ik++) {
+            sincos(dot(kvecs[ik], r), &sinkr, &coskr);
+            const int j2 = 2 * ik;
+            const int j1 = j2 - 1;
+            p[j1] = coskr;
+            p[j2] = sinkr;
+            dp[j1] = -sinkr * kvecs[ik];
+            dp[j2] = coskr * kvecs[ik];
+            for (int la = 0; la < OHMMS_DIM; la++) {
+                hess[j1](la, la) = -coskr * (kvecs[ik])[la] * (kvecs[ik])[la];
+                hess[j2](la, la) = -sinkr * (kvecs[ik])[la] * (kvecs[ik])[la];
+                ggg[j1][la](la, la) =
+                    sinkr * (kvecs[ik])[la] * (kvecs[ik])[la] * (kvecs[ik])[la];
+                ggg[j2][la](la, la) = -coskr * (kvecs[ik])[la] *
+                    (kvecs[ik])[la] * (kvecs[ik])[la];
+                for (int lb = la + 1; lb < OHMMS_DIM; lb++) {
+                    hess[j1](la, lb) =
+                        -coskr * (kvecs[ik])[la] * (kvecs[ik])[lb];
+                    hess[j2](la, lb) =
+                        -sinkr * (kvecs[ik])[la] * (kvecs[ik])[lb];
+                    hess[j1](lb, la) = hess[j1](la, lb);
+                    hess[j2](lb, la) = hess[j2](la, lb);
+                    ggg[j1][la](lb, la) = sinkr * (kvecs[ik])[la] *
+                        (kvecs[ik])[lb] * (kvecs[ik])[la];
+                    ggg[j2][la](lb, la) = -coskr * (kvecs[ik])[la] *
+                        (kvecs[ik])[lb] * (kvecs[ik])[la];
+                    ggg[j1][la](la, lb) = ggg[j1][la](lb, la);
+                    ggg[j2][la](la, lb) = ggg[j2][la](lb, la);
+                    ggg[j1][lb](la, la) = ggg[j1][la](lb, la);
+                    ggg[j2][lb](la, la) = ggg[j2][la](lb, la);
+                    ggg[j1][la](lb, lb) = sinkr * (kvecs[ik])[la] *
+                        (kvecs[ik])[lb] * (kvecs[ik])[lb];
+                    ggg[j2][la](lb, lb) = -coskr * (kvecs[ik])[la] *
+                        (kvecs[ik])[lb] * (kvecs[ik])[lb];
+                    ggg[j1][lb](la, lb) = ggg[j1][la](lb, lb);
+                    ggg[j2][lb](la, lb) = ggg[j2][la](lb, lb);
+                    ggg[j1][lb](lb, la) = ggg[j1][la](lb, lb);
+                    ggg[j2][lb](lb, la) = ggg[j2][la](lb, lb);
+                    for (int lc = lb + 1; lc < OHMMS_DIM; lc++) {
+                        ggg[j1][la](lb, lc) = sinkr * (kvecs[ik])[la] *
+                            (kvecs[ik])[lb] * (kvecs[ik])[lc];
+                        ggg[j2][la](lb, lc) = -coskr * (kvecs[ik])[la] *
+                            (kvecs[ik])[lb] * (kvecs[ik])[lc];
+                        ggg[j1][la](lc, lb) = ggg[j1][la](lb, lc);
+                        ggg[j2][la](lc, lb) = ggg[j2][la](lb, lc);
+                        ggg[j1][lb](la, lc) = ggg[j1][la](lb, lc);
+                        ggg[j2][lb](la, lc) = ggg[j2][la](lb, lc);
+                        ggg[j1][lb](lc, la) = ggg[j1][la](lb, lc);
+                        ggg[j2][lb](lc, la) = ggg[j2][la](lb, lc);
+                        ggg[j1][lc](la, lb) = ggg[j1][la](lb, lc);
+                        ggg[j2][lc](la, lb) = ggg[j2][la](lb, lc);
+                        ggg[j1][lc](lb, la) = ggg[j1][la](lb, lc);
+                        ggg[j2][lc](lb, la) = ggg[j2][la](lb, lc);
+                    }
+                }
+            }
+        }
+
+        p[0] = 1.0;
+        dp[0] = 0.0;
+        hess[0] = 0.0;
+        ggg[0] = 0.0;
+    }
+}
+
+template <>
+void
+FreeOrbitalT<double>::evaluate_notranspose(const ParticleSetT<double>& P,
+    int first, int last, ValueMatrix& phi, GradMatrix& dphi,
+    HessMatrix& d2phi_mat, GGGMatrix& d3phi_mat)
+{
+    RealType sinkr, coskr;
+    ValueType phi_of_r;
+    for (int iat = first, i = 0; iat < last; iat++, i++) {
+        ValueVector p(phi[i], OrbitalSetSize);
+        GradVector dp(dphi[i], OrbitalSetSize);
+        HessVector hess(d2phi_mat[i], OrbitalSetSize);
+        GGGVector ggg(d3phi_mat[i], OrbitalSetSize);
+
+        const PosType& r = P.activeR(iat);
+        for (int ik = mink; ik < maxk; ik++) {
+            sincos(dot(kvecs[ik], r), &sinkr, &coskr);
+            const int j2 = 2 * ik;
+            const int j1 = j2 - 1;
+            p[j1] = coskr;
+            p[j2] = sinkr;
+            dp[j1] = -sinkr * kvecs[ik];
+            dp[j2] = coskr * kvecs[ik];
+            for (int la = 0; la < OHMMS_DIM; la++) {
+                hess[j1](la, la) = -coskr * (kvecs[ik])[la] * (kvecs[ik])[la];
+                hess[j2](la, la) = -sinkr * (kvecs[ik])[la] * (kvecs[ik])[la];
+                ggg[j1][la](la, la) =
+                    sinkr * (kvecs[ik])[la] * (kvecs[ik])[la] * (kvecs[ik])[la];
+                ggg[j2][la](la, la) = -coskr * (kvecs[ik])[la] *
+                    (kvecs[ik])[la] * (kvecs[ik])[la];
+                for (int lb = la + 1; lb < OHMMS_DIM; lb++) {
+                    hess[j1](la, lb) =
+                        -coskr * (kvecs[ik])[la] * (kvecs[ik])[lb];
+                    hess[j2](la, lb) =
+                        -sinkr * (kvecs[ik])[la] * (kvecs[ik])[lb];
+                    hess[j1](lb, la) = hess[j1](la, lb);
+                    hess[j2](lb, la) = hess[j2](la, lb);
+                    ggg[j1][la](lb, la) = sinkr * (kvecs[ik])[la] *
+                        (kvecs[ik])[lb] * (kvecs[ik])[la];
+                    ggg[j2][la](lb, la) = -coskr * (kvecs[ik])[la] *
+                        (kvecs[ik])[lb] * (kvecs[ik])[la];
+                    ggg[j1][la](la, lb) = ggg[j1][la](lb, la);
+                    ggg[j2][la](la, lb) = ggg[j2][la](lb, la);
+                    ggg[j1][lb](la, la) = ggg[j1][la](lb, la);
+                    ggg[j2][lb](la, la) = ggg[j2][la](lb, la);
+                    ggg[j1][la](lb, lb) = sinkr * (kvecs[ik])[la] *
+                        (kvecs[ik])[lb] * (kvecs[ik])[lb];
+                    ggg[j2][la](lb, lb) = -coskr * (kvecs[ik])[la] *
+                        (kvecs[ik])[lb] * (kvecs[ik])[lb];
+                    ggg[j1][lb](la, lb) = ggg[j1][la](lb, lb);
+                    ggg[j2][lb](la, lb) = ggg[j2][la](lb, lb);
+                    ggg[j1][lb](lb, la) = ggg[j1][la](lb, lb);
+                    ggg[j2][lb](lb, la) = ggg[j2][la](lb, lb);
+                    for (int lc = lb + 1; lc < OHMMS_DIM; lc++) {
+                        ggg[j1][la](lb, lc) = sinkr * (kvecs[ik])[la] *
+                            (kvecs[ik])[lb] * (kvecs[ik])[lc];
+                        ggg[j2][la](lb, lc) = -coskr * (kvecs[ik])[la] *
+                            (kvecs[ik])[lb] * (kvecs[ik])[lc];
+                        ggg[j1][la](lc, lb) = ggg[j1][la](lb, lc);
+                        ggg[j2][la](lc, lb) = ggg[j2][la](lb, lc);
+                        ggg[j1][lb](la, lc) = ggg[j1][la](lb, lc);
+                        ggg[j2][lb](la, lc) = ggg[j2][la](lb, lc);
+                        ggg[j1][lb](lc, la) = ggg[j1][la](lb, lc);
+                        ggg[j2][lb](lc, la) = ggg[j2][la](lb, lc);
+                        ggg[j1][lc](la, lb) = ggg[j1][la](lb, lc);
+                        ggg[j2][lc](la, lb) = ggg[j2][la](lb, lc);
+                        ggg[j1][lc](lb, la) = ggg[j1][la](lb, lc);
+                        ggg[j2][lc](lb, la) = ggg[j2][la](lb, lc);
+                    }
+                }
+            }
+        }
+
+        p[0] = 1.0;
+        dp[0] = 0.0;
+        hess[0] = 0.0;
+        ggg[0] = 0.0;
+    }
+}
+
+template <>
+void
+FreeOrbitalT<std::complex<float>>::evaluate_notranspose(
+    const ParticleSetT<std::complex<float>>& P, int first, int last,
+    ValueMatrix& phi, GradMatrix& dphi, HessMatrix& d2phi_mat,
+    GGGMatrix& d3phi_mat)
 {
     RealType sinkr, coskr;
     ValueType phi_of_r;
@@ -542,9 +547,10 @@ FreeOrbitalT<std::complex<float>>::evaluate_notranspose(const ParticleSet& P,
 
 template <>
 void
-FreeOrbitalT<std::complex<double>>::evaluate_notranspose(const ParticleSet& P,
-    int first, int last, ValueMatrix& phi, GradMatrix& dphi,
-    HessMatrix& d2phi_mat, GGGMatrix& d3phi_mat)
+FreeOrbitalT<std::complex<double>>::evaluate_notranspose(
+    const ParticleSetT<std::complex<double>>& P, int first, int last,
+    ValueMatrix& phi, GradMatrix& dphi, HessMatrix& d2phi_mat,
+    GGGMatrix& d3phi_mat)
 {
     RealType sinkr, coskr;
     ValueType phi_of_r;
@@ -586,8 +592,8 @@ FreeOrbitalT<T>::~FreeOrbitalT()
 
 template <class T>
 void
-FreeOrbitalT<T>::evaluate_notranspose(const ParticleSet& P, int first, int last,
-    ValueMatrix& phi, GradMatrix& dphi, ValueMatrix& d2phi)
+FreeOrbitalT<T>::evaluate_notranspose(const ParticleSetT<T>& P, int first,
+    int last, ValueMatrix& phi, GradMatrix& dphi, ValueMatrix& d2phi)
 {
     for (int iat = first, i = 0; iat < last; iat++, i++) {
         ValueVector p(phi[i], this->OrbitalSetSize);

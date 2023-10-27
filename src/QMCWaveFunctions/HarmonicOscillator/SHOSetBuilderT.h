@@ -30,7 +30,7 @@ public:
     using PosType = typename SPOSetT<T>::PosType;
     using indices_t = typename SPOSetBuilderT<T>::indices_t;
 
-    ParticleSet& Ps;
+    ParticleSetT<T>& Ps;
 
     RealType length;
     RealType mass;
@@ -44,7 +44,7 @@ public:
     SPOSetInfoSimple<SHOState> basis_states;
 
     // construction/destruction
-    SHOSetBuilderT(ParticleSet& P, Communicate* comm);
+    SHOSetBuilderT(ParticleSetT<T>& P, Communicate* comm);
 
     ~SHOSetBuilderT() override;
 

@@ -101,14 +101,14 @@ public:
     makeClone() const override;
 
     void
-    evaluateValue(const ParticleSet& P, int iat, ValueVector& psi) override;
+    evaluateValue(const ParticleSetT<T>& P, int iat, ValueVector& psi) override;
 
     void
-    evaluateVGL(const ParticleSet& P, int iat, ValueVector& psi,
+    evaluateVGL(const ParticleSetT<T>& P, int iat, ValueVector& psi,
         GradVector& dpsi, ValueVector& d2psi) override;
 
     void
-    evaluate_notranspose(const ParticleSet& P, int first, int last,
+    evaluate_notranspose(const ParticleSetT<T>& P, int first, int last,
         ValueMatrix& logdet, GradMatrix& dlogdet,
         ValueMatrix& d2logdet) override;
 
@@ -152,22 +152,23 @@ public:
 
     // methods to be implemented in the future (possibly)
     void
-    evaluateThirdDeriv(const ParticleSet& P, int first, int last,
+    evaluateThirdDeriv(const ParticleSetT<T>& P, int first, int last,
         GGGMatrix& dddlogdet) override;
     void
-    evaluate_notranspose(const ParticleSet& P, int first, int last,
+    evaluate_notranspose(const ParticleSetT<T>& P, int first, int last,
         ValueMatrix& logdet, GradMatrix& dlogdet,
         HessMatrix& ddlogdet) override;
     void
-    evaluate_notranspose(const ParticleSet& P, int first, int last,
+    evaluate_notranspose(const ParticleSetT<T>& P, int first, int last,
         ValueMatrix& logdet, GradMatrix& dlogdet, HessMatrix& ddlogdet,
         GGGMatrix& dddlogdet) override;
     void
-    evaluateGradSource(const ParticleSet& P, int first, int last,
-        const ParticleSet& source, int iat_src, GradMatrix& gradphi) override;
+    evaluateGradSource(const ParticleSetT<T>& P, int first, int last,
+        const ParticleSetT<T>& source, int iat_src,
+        GradMatrix& gradphi) override;
     void
-    evaluateGradSource(const ParticleSet& P, int first, int last,
-        const ParticleSet& source, int iat_src, GradMatrix& dphi,
+    evaluateGradSource(const ParticleSetT<T>& P, int first, int last,
+        const ParticleSetT<T>& source, int iat_src, GradMatrix& dphi,
         HessMatrix& ddphi, GradMatrix& dlapl_phi) override;
 };
 

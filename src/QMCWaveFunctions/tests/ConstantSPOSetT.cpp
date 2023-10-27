@@ -45,7 +45,7 @@ ConstantSPOSetT<T>::makeClone() const
 
 template <class T>
 void
-ConstantSPOSetT<T>::checkOutVariables(const opt_variables_type& active)
+ConstantSPOSetT<T>::checkOutVariables(const OptVariablesType<T>& active)
 {
     APP_ABORT("ConstantSPOSet should not call checkOutVariables");
 };
@@ -87,9 +87,9 @@ ConstantSPOSetT<T>::setRefELapls(const ValueMatrix& lapls)
 template <class T>
 void
 ConstantSPOSetT<T>::evaluateValue(
-    const ParticleSet& P, int iat, ValueVector& psi)
+    const ParticleSetT<T>& P, int iat, ValueVector& psi)
 {
-    const auto* vp = dynamic_cast<const VirtualParticleSet*>(&P);
+    const auto* vp = dynamic_cast<const VirtualParticleSetT<T>*>(&P);
     int ptcl = vp ? vp->refPtcl : iat;
     assert(psi.size() == this->OrbitalSetSize);
     for (int iorb = 0; iorb < this->OrbitalSetSize; iorb++)
@@ -98,8 +98,8 @@ ConstantSPOSetT<T>::evaluateValue(
 
 template <class T>
 void
-ConstantSPOSetT<T>::evaluateVGL(const ParticleSet& P, int iat, ValueVector& psi,
-    GradVector& dpsi, ValueVector& d2psi)
+ConstantSPOSetT<T>::evaluateVGL(const ParticleSetT<T>& P, int iat,
+    ValueVector& psi, GradVector& dpsi, ValueVector& d2psi)
 {
     for (int iorb = 0; iorb < this->OrbitalSetSize; iorb++) {
         psi[iorb] = ref_psi_(iat, iorb);
@@ -110,7 +110,7 @@ ConstantSPOSetT<T>::evaluateVGL(const ParticleSet& P, int iat, ValueVector& psi,
 
 template <class T>
 void
-ConstantSPOSetT<T>::evaluate_notranspose(const ParticleSet& P, int first,
+ConstantSPOSetT<T>::evaluate_notranspose(const ParticleSetT<T>& P, int first,
     int last, ValueMatrix& logdet, GradMatrix& dlogdet, ValueMatrix& d2logdet)
 {
     for (int iat = first, i = 0; iat < last; ++iat, ++i) {

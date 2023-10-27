@@ -15,7 +15,7 @@ namespace qmcplusplus
 {
 template <typename T>
 LCAOrbitalSetWithCorrectionT<T>::LCAOrbitalSetWithCorrectionT(
-    const std::string& my_name, ParticleSet& ions, ParticleSet& els,
+    const std::string& my_name, ParticleSetT<T>& ions, ParticleSetT<T>& els,
     std::unique_ptr<basis_type>&& bs) :
     SPOSetT<T>(my_name),
     lcao(my_name + "_modified", std::move(bs)),
@@ -43,7 +43,7 @@ LCAOrbitalSetWithCorrectionT<T>::makeClone() const
 template <typename T>
 void
 LCAOrbitalSetWithCorrectionT<T>::evaluateValue(
-    const ParticleSet& P, int iat, ValueVector& psi)
+    const ParticleSetT<T>& P, int iat, ValueVector& psi)
 {
     lcao.evaluateValue(P, iat, psi);
     cusp.addV(P, iat, psi);
@@ -51,7 +51,7 @@ LCAOrbitalSetWithCorrectionT<T>::evaluateValue(
 
 template <typename T>
 void
-LCAOrbitalSetWithCorrectionT<T>::evaluateVGL(const ParticleSet& P, int iat,
+LCAOrbitalSetWithCorrectionT<T>::evaluateVGL(const ParticleSetT<T>& P, int iat,
     ValueVector& psi, GradVector& dpsi, ValueVector& d2psi)
 {
     lcao.evaluateVGL(P, iat, psi, dpsi, d2psi);
@@ -60,7 +60,7 @@ LCAOrbitalSetWithCorrectionT<T>::evaluateVGL(const ParticleSet& P, int iat,
 
 template <typename T>
 void
-LCAOrbitalSetWithCorrectionT<T>::evaluate_notranspose(const ParticleSet& P,
+LCAOrbitalSetWithCorrectionT<T>::evaluate_notranspose(const ParticleSetT<T>& P,
     int first, int last, ValueMatrix& logdet, GradMatrix& dlogdet,
     ValueMatrix& d2logdet)
 {

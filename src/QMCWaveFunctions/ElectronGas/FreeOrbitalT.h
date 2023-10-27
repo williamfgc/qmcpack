@@ -55,24 +55,24 @@ public:
     // phi[i][j] is phi_j(r_i), i.e. electron i in orbital j
     //  i \in [first, last)
     void
-    evaluate_notranspose(const ParticleSet& P, int first, int last,
+    evaluate_notranspose(const ParticleSetT<T>& P, int first, int last,
         ValueMatrix& phi, GradMatrix& dphi, ValueMatrix& d2phi) final;
 
     // plug r_i into all orbitals
     void
-    evaluateVGL(const ParticleSet& P, int i, ValueVector& pvec,
+    evaluateVGL(const ParticleSetT<T>& P, int i, ValueVector& pvec,
         GradVector& dpvec, ValueVector& d2pvec) final;
     void
-    evaluateValue(const ParticleSet& P, int iat, ValueVector& pvec) final;
+    evaluateValue(const ParticleSetT<T>& P, int iat, ValueVector& pvec) final;
 
     // hessian matrix is needed by backflow
     void
-    evaluate_notranspose(const ParticleSet& P, int first, int last,
+    evaluate_notranspose(const ParticleSetT<T>& P, int first, int last,
         ValueMatrix& phi, GradMatrix& dphi, HessMatrix& d2phi_mat) final;
 
     // derivative of hessian is needed to optimize backflow
     void
-    evaluate_notranspose(const ParticleSet& P, int first, int last,
+    evaluate_notranspose(const ParticleSetT<T>& P, int first, int last,
         ValueMatrix& phi, GradMatrix& dphi, HessMatrix& d2phi_mat,
         GGGMatrix& d3phi_mat) override;
 

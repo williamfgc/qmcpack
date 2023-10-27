@@ -91,7 +91,7 @@ FakeSPOT<T>::setOrbitalSetSize(int norbs)
 
 template <class T>
 void
-FakeSPOT<T>::evaluateValue(const ParticleSet& P, int iat, ValueVector& psi)
+FakeSPOT<T>::evaluateValue(const ParticleSetT<T>& P, int iat, ValueVector& psi)
 {
     if (iat < 0)
         for (int i = 0; i < psi.size(); i++)
@@ -106,7 +106,7 @@ FakeSPOT<T>::evaluateValue(const ParticleSet& P, int iat, ValueVector& psi)
 
 template <class T>
 void
-FakeSPOT<T>::evaluateVGL(const ParticleSet& P, int iat, ValueVector& psi,
+FakeSPOT<T>::evaluateVGL(const ParticleSetT<T>& P, int iat, ValueVector& psi,
     GradVector& dpsi, ValueVector& d2psi)
 {
     if (this->OrbitalSetSize == 3) {
@@ -125,7 +125,7 @@ FakeSPOT<T>::evaluateVGL(const ParticleSet& P, int iat, ValueVector& psi,
 
 template <class T>
 void
-FakeSPOT<T>::evaluate_notranspose(const ParticleSet& P, int first, int last,
+FakeSPOT<T>::evaluate_notranspose(const ParticleSetT<T>& P, int first, int last,
     ValueMatrix& logdet, GradMatrix& dlogdet, ValueMatrix& d2logdet)
 {
     if (this->OrbitalSetSize == 3) {

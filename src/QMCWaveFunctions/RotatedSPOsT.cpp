@@ -25,7 +25,7 @@ template <typename T>
 RotatedSPOsT<T>::RotatedSPOsT(
     const std::string& my_name, std::unique_ptr<SPOSetT<T>>&& spos) :
     SPOSetT<T>(my_name),
-    OptimizableObject(my_name),
+    OptimizableObjectT<T>(my_name),
     Phi(std::move(spos)),
     nel_major_(0),
     params_supplied(false),
@@ -121,7 +121,7 @@ RotatedSPOsT<T>::extractParamsFromAntiSymmetricMatrix(
 
 template <typename T>
 void
-RotatedSPOsT<T>::resetParametersExclusive(const opt_variables_type& active)
+RotatedSPOsT<T>::resetParametersExclusive(const OptVariablesType<T>& active)
 {
     std::vector<RealType> delta_param(m_act_rot_inds.size());
 
@@ -672,8 +672,8 @@ RotatedSPOsT<T>::log_antisym_matrix(const ValueMatrix& mat, ValueMatrix& output)
 
 template <typename T>
 void
-RotatedSPOsT<T>::evaluateDerivRatios(const VirtualParticleSet& VP,
-    const opt_variables_type& optvars, ValueVector& psi,
+RotatedSPOsT<T>::evaluateDerivRatios(const VirtualParticleSetT<T>& VP,
+    const OptVariablesType<T>& optvars, ValueVector& psi,
     const ValueVector& psiinv, std::vector<T>& ratios, Matrix<T>& dratios,
     int FirstIndex, int LastIndex)
 {
@@ -692,7 +692,7 @@ RotatedSPOsT<T>::evaluateDerivRatios(const VirtualParticleSet& VP,
     dpsiM_all = 0;
     d2psiM_all = 0;
 
-    const ParticleSet& P = VP.getRefPS();
+    const ParticleSetT<T>& P = VP.getRefPS();
     int iel = VP.refPtcl;
 
     Phi->evaluate_notranspose(
@@ -754,8 +754,8 @@ RotatedSPOsT<T>::evaluateDerivRatios(const VirtualParticleSet& VP,
 
 template <typename T>
 void
-RotatedSPOsT<T>::evaluateDerivativesWF(ParticleSet& P,
-    const opt_variables_type& optvars, Vector<T>& dlogpsi, int FirstIndex,
+RotatedSPOsT<T>::evaluateDerivativesWF(ParticleSetT<T>& P,
+    const OptVariablesType<T>& optvars, Vector<T>& dlogpsi, int FirstIndex,
     int LastIndex)
 {
     const size_t nel = LastIndex - FirstIndex;
@@ -803,8 +803,8 @@ RotatedSPOsT<T>::evaluateDerivativesWF(ParticleSet& P,
 
 template <typename T>
 void
-RotatedSPOsT<T>::evaluateDerivatives(ParticleSet& P,
-    const opt_variables_type& optvars, Vector<T>& dlogpsi,
+RotatedSPOsT<T>::evaluateDerivatives(ParticleSetT<T>& P,
+    const OptVariablesType<T>& optvars, Vector<T>& dlogpsi,
     Vector<T>& dhpsioverpsi, const int& FirstIndex, const int& LastIndex)
 {
     const size_t nel = LastIndex - FirstIndex;
@@ -866,7 +866,8 @@ RotatedSPOsT<T>::evaluateDerivatives(ParticleSet& P,
     // possibly replace wit BLAS calls
     for (int i = 0; i < nel; i++)
         for (int j = 0; j < nmo; j++)
-            Bbar(i, j) = d2psiM_all(i, j) + 2 * dot(myG_J[i], dpsiM_all(i, j)) +
+            Bbar(i, j) = d2psiM_all(i, j) +
+                2.0 * dot(myG_J[i], dpsiM_all(i, j)) +
                 myL_J[i] * psiM_all(i, j);
 
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~PART2
@@ -909,8 +910,8 @@ RotatedSPOsT<T>::evaluateDerivatives(ParticleSet& P,
 
 template <typename T>
 void
-RotatedSPOsT<T>::evaluateDerivatives(ParticleSet& P,
-    const opt_variables_type& optvars, Vector<T>& dlogpsi,
+RotatedSPOsT<T>::evaluateDerivatives(ParticleSetT<T>& P,
+    const OptVariablesType<T>& optvars, Vector<T>& dlogpsi,
     Vector<T>& dhpsioverpsi, const T& psiCurrent, const std::vector<T>& Coeff,
     const std::vector<size_t>& C2node_up, const std::vector<size_t>& C2node_dn,
     const ValueVector& detValues_up, const ValueVector& detValues_dn,
@@ -932,8 +933,8 @@ RotatedSPOsT<T>::evaluateDerivatives(ParticleSet& P,
             recalculate = true;
     }
     if (recalculate) {
-        ParticleSet::ParticleGradient myG_temp, myG_J;
-        ParticleSet::ParticleLaplacian myL_temp, myL_J;
+        typename ParticleSetT<T>::ParticleGradient myG_temp, myG_J;
+        typename ParticleSetT<T>::ParticleLaplacian myL_temp, myL_J;
         const int NP = P.getTotalNum();
         myG_temp.resize(NP);
         myG_temp = 0.0;
@@ -984,9 +985,9 @@ RotatedSPOsT<T>::evaluateDerivatives(ParticleSet& P,
 
 template <typename T>
 void
-RotatedSPOsT<T>::evaluateDerivativesWF(ParticleSet& P,
-    const opt_variables_type& optvars, Vector<T>& dlogpsi,
-    const FullRealType& psiCurrent, const std::vector<T>& Coeff,
+RotatedSPOsT<T>::evaluateDerivativesWF(ParticleSetT<T>& P,
+    const OptVariablesType<T>& optvars, Vector<ValueType>& dlogpsi,
+    const ValueType& psiCurrent, const std::vector<ValueType>& Coeff,
     const std::vector<size_t>& C2node_up, const std::vector<size_t>& C2node_dn,
     const ValueVector& detValues_up, const ValueVector& detValues_dn,
     const ValueMatrix& M_up, const ValueMatrix& M_dn,
@@ -1015,8 +1016,8 @@ RotatedSPOsT<T>::evaluateDerivativesWF(ParticleSet& P,
 template <typename T>
 void
 RotatedSPOsT<T>::table_method_eval(Vector<T>& dlogpsi, Vector<T>& dhpsioverpsi,
-    const ParticleSet::ParticleLaplacian& myL_J,
-    const ParticleSet::ParticleGradient& myG_J, const size_t nel,
+    const typename ParticleSetT<T>::ParticleLaplacian& myL_J,
+    const typename ParticleSetT<T>::ParticleGradient& myG_J, const size_t nel,
     const size_t nmo, const T& psiCurrent, const std::vector<T>& Coeff,
     const std::vector<size_t>& C2node_up, const std::vector<size_t>& C2node_dn,
     const ValueVector& detValues_up, const ValueVector& detValues_dn,
@@ -1238,7 +1239,7 @@ $
     for (int i = 0; i < nel; i++)
         for (int j = 0; j < nmo; j++)
             Bbar(i, j) = B_lapl(i, j) +
-                2 * dot(myG_J[i + offset1], B_grad(i, j)) +
+                2.0 * dot(myG_J[i + offset1], B_grad(i, j)) +
                 myL_J[i + offset1] * M_up(i, j);
 
     const T* restrict B(Bbar.data());
@@ -1274,7 +1275,7 @@ $
     for (int index = 0; index < num_unique_dn_dets; index++)
         for (int iat = 0; iat < NPother; iat++)
             Oi[index] += lapls_dn(index, iat) +
-                2 * dot(grads_dn(index, iat), myG_J[offset2 + iat]) +
+                2.0 * dot(grads_dn(index, iat), myG_J[offset2 + iat]) +
                 myL_J[offset2 + iat] * detValues_dn[index];
 
     // const0 = C_{0}*det(A_{0\downarrow})+\sum_{i=1}
@@ -1699,7 +1700,7 @@ template <typename T>
 void
 RotatedSPOsT<T>::mw_evaluateDetRatios(
     const RefVectorWithLeader<SPOSetT<T>>& spo_list,
-    const RefVectorWithLeader<const VirtualParticleSet>& vp_list,
+    const RefVectorWithLeader<const VirtualParticleSetT<T>>& vp_list,
     const RefVector<ValueVector>& psi_list,
     const std::vector<const T*>& invRow_ptr_list,
     std::vector<std::vector<T>>& ratios_list) const
@@ -1714,7 +1715,7 @@ template <typename T>
 void
 RotatedSPOsT<T>::mw_evaluateValue(
     const RefVectorWithLeader<SPOSetT<T>>& spo_list,
-    const RefVectorWithLeader<ParticleSet>& P_list, int iat,
+    const RefVectorWithLeader<ParticleSetT<T>>& P_list, int iat,
     const RefVector<ValueVector>& psi_v_list) const
 {
     auto phi_list = extractPhiRefList(spo_list);
@@ -1725,7 +1726,7 @@ RotatedSPOsT<T>::mw_evaluateValue(
 template <typename T>
 void
 RotatedSPOsT<T>::mw_evaluateVGL(const RefVectorWithLeader<SPOSetT<T>>& spo_list,
-    const RefVectorWithLeader<ParticleSet>& P_list, int iat,
+    const RefVectorWithLeader<ParticleSetT<T>>& P_list, int iat,
     const RefVector<ValueVector>& psi_v_list,
     const RefVector<GradVector>& dpsi_v_list,
     const RefVector<ValueVector>& d2psi_v_list) const
@@ -1740,11 +1741,11 @@ template <typename T>
 void
 RotatedSPOsT<T>::mw_evaluateVGLWithSpin(
     const RefVectorWithLeader<SPOSetT<T>>& spo_list,
-    const RefVectorWithLeader<ParticleSet>& P_list, int iat,
+    const RefVectorWithLeader<ParticleSetT<T>>& P_list, int iat,
     const RefVector<ValueVector>& psi_v_list,
     const RefVector<GradVector>& dpsi_v_list,
     const RefVector<ValueVector>& d2psi_v_list,
-    OffloadMatrix<QMCTraits::ComplexType>& mw_dspin) const
+    OffloadMatrix<ComplexType>& mw_dspin) const
 {
     auto phi_list = extractPhiRefList(spo_list);
     auto& leader = phi_list.getLeader();
@@ -1756,7 +1757,7 @@ template <typename T>
 void
 RotatedSPOsT<T>::mw_evaluateVGLandDetRatioGrads(
     const RefVectorWithLeader<SPOSetT<T>>& spo_list,
-    const RefVectorWithLeader<ParticleSet>& P_list, int iat,
+    const RefVectorWithLeader<ParticleSetT<T>>& P_list, int iat,
     const std::vector<const T*>& invRow_ptr_list, OffloadMWVGLArray& phi_vgl_v,
     std::vector<T>& ratios, std::vector<GradType>& grads) const
 {
@@ -1770,7 +1771,7 @@ template <typename T>
 void
 RotatedSPOsT<T>::mw_evaluateVGLandDetRatioGradsWithSpin(
     const RefVectorWithLeader<SPOSetT<T>>& spo_list,
-    const RefVectorWithLeader<ParticleSet>& P_list, int iat,
+    const RefVectorWithLeader<ParticleSetT<T>>& P_list, int iat,
     const std::vector<const T*>& invRow_ptr_list, OffloadMWVGLArray& phi_vgl_v,
     std::vector<T>& ratios, std::vector<GradType>& grads,
     std::vector<T>& spingrads) const
@@ -1785,7 +1786,7 @@ template <typename T>
 void
 RotatedSPOsT<T>::mw_evaluate_notranspose(
     const RefVectorWithLeader<SPOSetT<T>>& spo_list,
-    const RefVectorWithLeader<ParticleSet>& P_list, int first, int last,
+    const RefVectorWithLeader<ParticleSetT<T>>& P_list, int first, int last,
     const RefVector<ValueMatrix>& logdet_list,
     const RefVector<GradMatrix>& dlogdet_list,
     const RefVector<ValueMatrix>& d2logdet_list) const

@@ -328,8 +328,8 @@ public:
    * It returns a complex value if the wavefunction is complex.
    * @param P the active ParticleSet
    * @param iat the index of a particle moved to the new position.
-   * @param grad_iat gradients
-   * @return ratio value
+   * @param grad_iat gradients. The consumer must verify if ratio is non-zero.
+   * @return ratio value. The caller must reject zero ratio moves.
    */
   ValueType calcRatioGrad(ParticleSet& P, int iat, GradType& grad_iat);
 
@@ -337,9 +337,9 @@ public:
    * It returns a complex value if the wavefunction is complex.
    * @param P the active ParticleSet
    * @param iat the index of a particle moved to the new position.
-   * @param grad_iat real space gradient for iat
-   * @param spingrad_iat spin gradient for iat
-   * @return ratio value
+   * @param grad_iat real space gradient for iat. The consumer must verify if ratio is non-zero.
+   * @param spingrad_iat spin gradient for iat. The consumer must verify if ratio is non-zero.
+   * @return ratio value. The caller must reject zero ratio moves.
    */
   ValueType calcRatioGradWithSpin(ParticleSet& P, int iat, GradType& grad_iat, ComplexType& spingrad_iat);
 
@@ -470,8 +470,9 @@ public:
 
   void evaluateRatiosAlltoOne(ParticleSet& P, std::vector<ValueType>& ratios);
 
-  void setTwist(std::vector<RealType> t) { myTwist = t; }
-  const std::vector<RealType> twist() { return myTwist; }
+  void setTwist(const std::vector<RealType>& t) { myTwist = t; }
+  void setTwist(std::vector<RealType>&& t) { myTwist = std::move(t); }
+  const std::vector<RealType>& twist() const { return myTwist; }
 
   inline void setMassTerm(ParticleSet& P)
   {

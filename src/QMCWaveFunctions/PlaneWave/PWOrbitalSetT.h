@@ -109,14 +109,14 @@ public:
     }
 
     void
-    evaluateValue(const ParticleSet& P, int iat, ValueVector& psi) override;
+    evaluateValue(const ParticleSetT<T>& P, int iat, ValueVector& psi) override;
 
     void
-    evaluateVGL(const ParticleSet& P, int iat, ValueVector& psi,
+    evaluateVGL(const ParticleSetT<T>& P, int iat, ValueVector& psi,
         GradVector& dpsi, ValueVector& d2psi) override;
 
     void
-    evaluate_notranspose(const ParticleSet& P, int first, int last,
+    evaluate_notranspose(const ParticleSetT<T>& P, int first, int last,
         ValueMatrix& logdet, GradMatrix& dlogdet,
         ValueMatrix& d2logdet) override;
 

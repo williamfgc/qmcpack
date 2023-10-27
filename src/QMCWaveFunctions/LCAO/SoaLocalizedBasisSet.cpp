@@ -52,7 +52,7 @@ SoaLocalizedBasisSet<COT, ORBT>::SoaLocalizedBasisSet(const SoaLocalizedBasisSet
 template<class COT, typename ORBT>
 void SoaLocalizedBasisSet<COT, ORBT>::setPBCParams(const TinyVector<int, 3>& PBCImages,
                                                    const TinyVector<double, 3> Sup_Twist,
-                                                   const std::vector<QMCTraits::ValueType>& phase_factor)
+                                                   const std::vector<ORBT>& phase_factor)
 {
   for (int i = 0; i < LOBasisSet.size(); ++i)
     LOBasisSet[i]->setPBCParams(PBCImages, Sup_Twist, phase_factor);
@@ -224,6 +224,18 @@ void SoaLocalizedBasisSet<COT, ORBT>::mw_evaluateValue(const RefVectorWithLeader
   for (size_t iw = 0; iw < P_list.size(); iw++)
     evaluateV(P_list[iw], iat, v.data_at(iw, 0));
 }
+
+template<class COT, typename ORBT>
+void SoaLocalizedBasisSet<COT, ORBT>::mw_evaluateValueVPs(const RefVectorWithLeader<const VirtualParticleSet>& vp_list,
+                                                          OffloadMWVArray& v)
+{
+  assert(BasisSetSize == v.size(1));
+  size_t index = 0;
+  for (size_t iw = 0; iw < vp_list.size(); iw++)
+    for (int iat = 0; iat < vp_list[iw].getTotalNum(); iat++)
+      evaluateV(vp_list[iw], iat, v.data_at(index++, 0));
+}
+
 
 template<class COT, typename ORBT>
 void SoaLocalizedBasisSet<COT, ORBT>::evaluateGradSourceV(const ParticleSet& P,

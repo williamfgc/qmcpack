@@ -18,8 +18,8 @@
 #define QMCPLUSPLUS_COMPOSITE_SPOSETT_H
 
 #include "QMCWaveFunctions/BasisSetBase.h"
-#include "QMCWaveFunctions/SPOSetBuilder.h"
-#include "QMCWaveFunctions/SPOSetBuilderFactory.h"
+#include "QMCWaveFunctions/SPOSetBuilderFactoryT.h"
+#include "QMCWaveFunctions/SPOSetBuilderT.h"
 #include "QMCWaveFunctions/SPOSetT.h"
 
 namespace qmcplusplus
@@ -79,10 +79,10 @@ public:
     makeClone() const override;
 
     void
-    evaluateValue(const ParticleSet& P, int iat, ValueVector& psi) override;
+    evaluateValue(const ParticleSetT<T>& P, int iat, ValueVector& psi) override;
 
     void
-    evaluateVGL(const ParticleSet& P, int iat, ValueVector& psi,
+    evaluateVGL(const ParticleSetT<T>& P, int iat, ValueVector& psi,
         GradVector& dpsi, ValueVector& d2psi) override;
 
     /// unimplemented functions call this to abort
@@ -94,17 +94,39 @@ public:
 
     // methods to be implemented in the future (possibly)
     void
-    evaluate_notranspose(const ParticleSet& P, int first, int last,
+    evaluate_notranspose(const ParticleSetT<T>& P, int first, int last,
         ValueMatrix& logdet, GradMatrix& dlogdet,
         ValueMatrix& d2logdet) override;
     void
-    evaluate_notranspose(const ParticleSet& P, int first, int last,
+    evaluate_notranspose(const ParticleSetT<T>& P, int first, int last,
         ValueMatrix& logdet, GradMatrix& dlogdet,
         HessMatrix& ddlogdet) override;
     void
-    evaluate_notranspose(const ParticleSet& P, int first, int last,
+    evaluate_notranspose(const ParticleSetT<T>& P, int first, int last,
         ValueMatrix& logdet, GradMatrix& dlogdet, HessMatrix& ddlogdet,
         GGGMatrix& dddlogdet) override;
+};
+
+template <typename T>
+class CompositeSPOSetBuilderT : public SPOSetBuilderT<T>
+{
+public:
+    CompositeSPOSetBuilderT(
+        Communicate* comm, const SPOSetBuilderFactoryT<T>& factory) :
+        SPOSetBuilderT<T>("Composite", comm),
+        sposet_builder_factory_(factory)
+    {
+    }
+
+    // SPOSetBuilder interface
+    std::unique_ptr<SPOSetT<T>>
+    createSPOSetFromXML(xmlNodePtr cur) override;
+
+    std::unique_ptr<SPOSetT<T>>
+    createSPOSet(xmlNodePtr cur, SPOSetInputInfo& input) override;
+
+    /// reference to the sposet_builder_factory
+    const SPOSetBuilderFactoryT<T>& sposet_builder_factory_;
 };
 
 } // namespace qmcplusplus
