@@ -19,6 +19,7 @@
 
 #include "OMPTarget/OffloadAlignedAllocators.hpp"
 #include "Particle/ParticleSet.h"
+#include "Particle/VirtualParticleSetT.h"
 #include "QMCWaveFunctions/OrbitalSetTraits.h"
 
 namespace qmcplusplus
@@ -149,6 +150,10 @@ struct SoaBasisSetBaseT
   // Evaluates value for electron "iat".  places it in a offload array for
   // batched code.
   virtual void mw_evaluateValue(const RefVectorWithLeader<ParticleSetT<T>>& P_list, int iat, OffloadMWVArray& v) = 0;
+  //Evaluates value for all the electrons of the virtual particles. places it in a offload array for batched code.
+  virtual void mw_evaluateValueVPs(const RefVectorWithLeader<SoaBasisSetBaseT<T>>& basis_list,
+                                   const RefVectorWithLeader<const VirtualParticleSetT<T>>& vp_list,
+                                   OffloadMWVArray& v) = 0;
   // Evaluates value, gradient, and Hessian for electron "iat".  Parks them
   // into a temporary data structure "vgh".
   virtual void evaluateVGH(const ParticleSetT<T>& P, int iat, vgh_type& vgh) = 0;

@@ -103,7 +103,7 @@ SoaLocalizedBasisSetT<COT, ORBT>::SoaLocalizedBasisSetT(const SoaLocalizedBasisS
 }
 
 template<class COT, typename ORBT>
-void SoaLocalizedBasisSet<COT, ORBT>::setPBCParams(
+void SoaLocalizedBasisSetT<COT, ORBT>::setPBCParams(
     const TinyVector<int, 3>& PBCImages,
     const TinyVector<double, 3> Sup_Twist,
     const Vector<ValueType, OffloadPinnedAllocator<ValueType>>& phase_factor,
@@ -253,19 +253,19 @@ void SoaLocalizedBasisSetT<COT, ORBT>::evaluateVGHGH(const ParticleSetT<ORBT>& P
 }
 
 template<class COT, typename ORBT>
-void SoaLocalizedBasisSet<COT, ORBT>::mw_evaluateValueVPs(const RefVectorWithLeader<SoaBasisSetBase<ORBT>>& basis_list,
-                                                          const RefVectorWithLeader<const VirtualParticleSet>& vp_list,
-                                                          OffloadMWVArray& vp_basis_v)
+void SoaLocalizedBasisSetT<COT, ORBT>::mw_evaluateValueVPs(
+    const RefVectorWithLeader<SoaBasisSetBaseT<ORBT>>& basis_list,
+    const RefVectorWithLeader<const VirtualParticleSetT<ORBT>>& vp_list,
+    OffloadMWVArray& vp_basis_v)
 {
   assert(this == &basis_list.getLeader());
-  auto& basis_leader = basis_list.template getCastedLeader<SoaLocalizedBasisSet<COT, ORBT>>();
+  auto& basis_leader = basis_list.template getCastedLeader<SoaLocalizedBasisSetT<COT, ORBT>>();
 
   const size_t nVPs = vp_basis_v.size(0);
   assert(vp_basis_v.size(1) == BasisSetSize);
   const auto& IonID(ions_.GroupID);
 
   auto& vps_leader = vp_list.getLeader();
-
 
   const auto dt_list(vps_leader.extractDTRefList(vp_list, myTableIndex));
   const auto coordR_list(vps_leader.extractVPCoords(vp_list));

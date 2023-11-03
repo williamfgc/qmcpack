@@ -21,15 +21,17 @@ namespace qmcplusplus
 template<class T>
 struct LCAOrbitalSetT<T>::LCAOMultiWalkerMem : public Resource
 {
-  LCAOMultiWalkerMem() : Resource("LCAOrbitalSetT") {}
+  LCAOMultiWalkerMem() : Resource("LCAOrbitalSet") {}
   LCAOMultiWalkerMem(const LCAOMultiWalkerMem&) : LCAOMultiWalkerMem() {}
 
   std::unique_ptr<Resource> makeClone() const override { return std::make_unique<LCAOMultiWalkerMem>(*this); }
 
-  OffloadMWVGLArray phi_vgl_v; // [5][NW][NumMO]
-  OffloadMWVGLArray basis_mw;  // [5][NW][NumAO]
-  OffloadMWVArray phi_v;       // [NW][NumMO]
-  OffloadMWVArray basis_v_mw;  // [NW][NumMO]
+  OffloadMWVGLArray phi_vgl_v;    // [5][NW][NumMO]
+  OffloadMWVGLArray basis_vgl_mw; // [5][NW][NumAO]
+  OffloadMWVArray phi_v;          // [NW][NumMO]
+  OffloadMWVArray basis_v_mw;     // [NW][NumAO]
+  OffloadMWVArray vp_phi_v;       // [NVPs][NumMO]
+  OffloadMWVArray vp_basis_v_mw;  // [NVPs][NumAO]
 };
 
 template<class T>
@@ -476,13 +478,13 @@ void LCAOrbitalSetT<T>::mw_evaluateVGLImplGEMM(const RefVectorWithLeader<SPOSetT
                                                OffloadMWVGLArray& phi_vgl_v) const
 {
   assert(this == &spo_list.getLeader());
-  auto& spo_leader = spo_list.template getCastedLeader<LCAOrbitalSetT<T>>();
-  auto& basis_mw   = spo_leader.mw_mem_handle_.getResource().basis_mw;
-  basis_mw.resize(QMCTraits::DIM_VGL, spo_list.size(), BasisSetSize);
+  auto& spo_leader   = spo_list.template getCastedLeader<LCAOrbitalSetT<T>>();
+  auto& basis_vgl_mw = spo_leader.mw_mem_handle_.getResource().basis_vgl_mw;
+  basis_vgl_mw.resize(QMCTraits::DIM_VGL, spo_list.size(), BasisSetSize);
 
   {
     ScopedTimer local(basis_timer_);
-    myBasisSet->mw_evaluateVGL(P_list, iat, basis_mw);
+    myBasisSet->mw_evaluateVGL(P_list, iat, basis_vgl_mw);
   }
 
   if (Identity)
@@ -493,7 +495,7 @@ void LCAOrbitalSetT<T>::mw_evaluateVGLImplGEMM(const RefVectorWithLeader<SPOSetT
 
     for (size_t idim = 0; idim < QMCTraits::DIM_VGL; idim++)
       for (int iw = 0; iw < nw; iw++)
-        std::copy_n(basis_mw.data_at(idim, iw, 0), output_size, phi_vgl_v.data_at(idim, iw, 0));
+        std::copy_n(basis_vgl_mw.data_at(idim, iw, 0), output_size, phi_vgl_v.data_at(idim, iw, 0));
   }
   else
   {
@@ -503,13 +505,12 @@ void LCAOrbitalSetT<T>::mw_evaluateVGLImplGEMM(const RefVectorWithLeader<SPOSetT
       ScopedTimer local(mo_timer_);
       ValueMatrix C_partial_view(C->data(), requested_orb_size, BasisSetSize);
       // TODO: make class for general blas interface in Platforms
-      // have instance of that class as member of LCAOrbitalSetT, call
-      // gemm through that
+      // have instance of that class as member of LCAOrbitalSet, call gemm through that
       BLAS::gemm('T', 'N',
                  requested_orb_size,                   // MOs
                  spo_list.size() * QMCTraits::DIM_VGL, // walkers * DIM_VGL
                  BasisSetSize,                         // AOs
-                 1, C_partial_view.data(), BasisSetSize, basis_mw.data(), BasisSetSize, 0, phi_vgl_v.data(),
+                 1, C_partial_view.data(), BasisSetSize, basis_vgl_mw.data(), BasisSetSize, 0, phi_vgl_v.data(),
                  requested_orb_size);
     }
   }
@@ -518,10 +519,10 @@ void LCAOrbitalSetT<T>::mw_evaluateVGLImplGEMM(const RefVectorWithLeader<SPOSetT
 template<class T>
 void LCAOrbitalSetT<T>::mw_evaluateValueVPsImplGEMM(const RefVectorWithLeader<SPOSetT<T>>& spo_list,
                                                     const RefVectorWithLeader<const VirtualParticleSetT<T>>& vp_list,
-                                                    OffloadMWVArray& phi_v) const
+                                                    OffloadMWVArray& vp_phi_v) const
 {
   assert(this == &spo_list.getLeader());
-  auto& spo_leader = spo_list.getCastedLeader<LCAOrbitalSetT<T>>();
+  auto& spo_leader = spo_list.template getCastedLeader<LCAOrbitalSetT<T>>();
   //const size_t nw  = spo_list.size();
   auto& vp_basis_v_mw = spo_leader.mw_mem_handle_.getResource().vp_basis_v_mw;
   //Splatter basis_v
@@ -534,12 +535,12 @@ void LCAOrbitalSetT<T>::mw_evaluateValueVPsImplGEMM(const RefVectorWithLeader<SP
 
   if (Identity)
   {
-    std::copy_n(vp_basis_v_mw.data_at(0, 0), OrbitalSetSize * nVPs, vp_phi_v.data_at(0, 0));
+    std::copy_n(vp_basis_v_mw.data_at(0, 0), this->OrbitalSetSize * nVPs, vp_phi_v.data_at(0, 0));
   }
   else
   {
     const size_t requested_orb_size = vp_phi_v.size(1);
-    assert(requested_orb_size <= OrbitalSetSize);
+    assert(requested_orb_size <= this->OrbitalSetSize);
     ValueMatrix C_partial_view(C->data(), requested_orb_size, BasisSetSize);
     BLAS::gemm('T', 'N',
                requested_orb_size, // MOs

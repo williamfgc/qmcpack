@@ -100,12 +100,12 @@ public:
 
   /**Extract list of Distance Tables
     */
-  static const RefVectorWithLeader<const DistanceTableABT> extractDTRefList(
-      const RefVectorWithLeader<const VirtualParticleSetT>& vp_list,
+  static const RefVectorWithLeader<const DistanceTableABT<T>> extractDTRefList(
+      const RefVectorWithLeader<const VirtualParticleSetT<T>>& vp_list,
       int id);
   /**Extract list of VP coordinates, flattened over all walkers
     */
-  static const std::vector<PosType> extractVPCoords(const RefVectorWithLeader<const VirtualParticleSetT>& vp_list);
+  static const std::vector<PosType> extractVPCoords(const RefVectorWithLeader<const VirtualParticleSetT<T>>& vp_list);
 
   /** move virtual particles to new postions and update distance tables
      * @param refp reference particle set

@@ -1118,8 +1118,8 @@ void LCAOrbitalBuilderT<T>::EvalPeriodicImagePhaseFactors(
   ///Exp(ik.g) where i is imaginary, k is the supertwist and g is the translation vector PBCImage.
   if (h5_path != "" && !usesOpenBC)
   {
-    hdf_archive hin(myComm);
-    if (myComm->rank() == 0)
+    hdf_archive hin(this->myComm);
+    if (this->myComm->rank() == 0)
     {
       if (!hin.open(h5_path, H5F_ACC_RDONLY))
         APP_ABORT("Could not open H5 file");
@@ -1131,7 +1131,7 @@ void LCAOrbitalBuilderT<T>::EvalPeriodicImagePhaseFactors(
     }
     for (int i = 0; i < 3; i++)
       for (int j = 0; j < 3; j++)
-        myComm->bcast(Lattice(i, j));
+        this->myComm->bcast(Lattice(i, j));
   }
   else if (!usesOpenBC)
   {
@@ -1172,8 +1172,8 @@ void LCAOrbitalBuilderT<T>::EvalPeriodicImagePhaseFactors(
   ///Exp(ik.g) where i is imaginary, k is the supertwist and g is the translation vector PBCImage.
   if (h5_path != "" && !usesOpenBC)
   {
-    hdf_archive hin(myComm);
-    if (myComm->rank() == 0)
+    hdf_archive hin(this->myComm);
+    if (this->myComm->rank() == 0)
     {
       if (!hin.open(h5_path, H5F_ACC_RDONLY))
         APP_ABORT("Could not open H5 file");

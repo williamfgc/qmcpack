@@ -20,6 +20,7 @@
 
 #include "OMPTarget/OffloadAlignedAllocators.hpp"
 #include "QMCWaveFunctions/BasisSetBaseT.h"
+#include "Particle/VirtualParticleSetT.h"
 
 #include <memory>
 
@@ -45,8 +46,8 @@ public:
   using vgh_type          = typename BaseType::vgh_type;
   using vghgh_type        = typename BaseType::vghgh_type;
   using PosType           = typename ParticleSetT<ORBT>::PosType;
-  using OffloadMWVGLArray = typename BaseType::OffloadMWVGLArray;
-  using OffloadMWVArray   = typename BaseType::OffloadMWVArray;
+  using OffloadMWVGLArray = Array<ValueType, 3, OffloadPinnedAllocator<ValueType>>; // [VGL, walker, Orbs]
+  using OffloadMWVArray   = Array<ValueType, 2, OffloadPinnedAllocator<ValueType>>; // [walker, Orbs]
 
   using BaseType::BasisSetSize;
 
@@ -121,8 +122,8 @@ public:
    * @param vp_list list of quantum virtual particleset (one for each walker)
    * @param v   Array(n_walkers, BasisSetSize)
    */
-  void mw_evaluateValueVPs(const RefVectorWithLeader<SoaBasisSetBase<ORBT>>& basis_list,
-                           const RefVectorWithLeader<const VirtualParticleSetT>& vp_list,
+  void mw_evaluateValueVPs(const RefVectorWithLeader<SoaBasisSetBaseT<ORBT>>& basis_list,
+                           const RefVectorWithLeader<const VirtualParticleSetT<ORBT>>& vp_list,
                            OffloadMWVArray& v) override;
 
   /** compute VGL using packed array with all walkers

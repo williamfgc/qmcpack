@@ -56,14 +56,16 @@ struct CorrectPhaseFunctor<std::complex<T>>
 template<typename ROT, typename SH, typename ORBT>
 struct SoaAtomicBasisSetT
 {
-  using RadialOrbital_t = ROT;
-  using RealType        = typename ROT::RealType;
-  using GridType        = typename ROT::GridType;
-  using ValueType       = ORBT;
-  using OffloadArray4D  = Array<ValueType, 4, OffloadPinnedAllocator<ValueType>>;
-  using OffloadArray3D  = Array<ValueType, 3, OffloadPinnedAllocator<ValueType>>;
-  using OffloadMatrix   = Matrix<ValueType, OffloadPinnedAllocator<ValueType>>;
-  using OffloadVector   = Vector<ValueType, OffloadPinnedAllocator<ValueType>>;
+  using RadialOrbital_t  = ROT;
+  using RealType         = typename ROT::RealType;
+  using GridType         = typename ROT::GridType;
+  using ValueType        = ORBT;
+  using OffloadArray4D   = Array<ValueType, 4, OffloadPinnedAllocator<ValueType>>;
+  using OffloadArray3D   = Array<ValueType, 3, OffloadPinnedAllocator<ValueType>>;
+  using OffloadArray2D   = Array<RealType, 2, OffloadPinnedAllocator<RealType>>;
+  using OffloadMatrix    = Matrix<ValueType, OffloadPinnedAllocator<ValueType>>;
+  using OffloadVector    = Vector<ValueType, OffloadPinnedAllocator<ValueType>>;
+  using OffloadIntVector = Vector<int, OffloadPinnedAllocator<int>>;
 
   /// multi walker shared memory buffer
   struct SoaAtomicBSetMultiWalkerMem;
@@ -76,8 +78,9 @@ struct SoaAtomicBasisSetT
   TinyVector<int, 3> PBCImages;
   /// Coordinates of SuperTwist
   TinyVector<double, 3> SuperTwist;
-  /// Phase Factor array
-  std::vector<ValueType> periodic_image_phase_factors;
+  ///Phase Factor array
+  OffloadVector periodic_image_phase_factors;
+  OffloadArray2D periodic_image_displacements;
   /// maximum radius of this center
   RealType Rmax;
   /// spherical harmonics
@@ -94,9 +97,48 @@ struct SoaAtomicBasisSetT
   std::vector<QuantumNumberType> RnlID;
   /// temporary storage
   VectorSoaContainer<RealType, 4> tempS;
+  ///Phase Factor array of images
+  std::shared_ptr<OffloadVector> periodic_image_phase_factors_ptr_;
+  ///Displacements of images
+  std::shared_ptr<OffloadArray2D> periodic_image_displacements_ptr_;
+  ///reference to the phase factor array of images
+  OffloadVector& periodic_image_phase_factors_;
+  ///reference to the displacements of images
+  OffloadArray2D& periodic_image_displacements_;
+  /**index of the corresponding radial orbital with quantum numbers \f$ (n,l) \f$ */
+  const std::shared_ptr<OffloadIntVector> NL_ptr_;
+  ///index of the corresponding real Spherical Harmonic with quantum numbers \f$ (l,m) \f$
+  const std::shared_ptr<OffloadIntVector> LM_ptr_;
+  /// reference to NL_ptr_
+  OffloadIntVector& NL;
+  /// reference to LM_ptr_
+  OffloadIntVector& LM;
+  // timers
+  NewTimer& ylm_timer_;
+  NewTimer& rnl_timer_;
+  NewTimer& pbc_timer_;
+  NewTimer& nelec_pbc_timer_;
+  NewTimer& phase_timer_;
+  NewTimer& psi_timer_;
 
   /// the constructor
-  explicit SoaAtomicBasisSetT(int lmax, bool addsignforM = false) : Ylm(lmax, addsignforM) {}
+  explicit SoaAtomicBasisSetT(int lmax, bool addsignforM = false)
+      : Ylm(lmax, addsignforM),
+        periodic_image_phase_factors_ptr_(std::make_shared<OffloadVector>()),
+        periodic_image_displacements_ptr_(std::make_shared<OffloadArray2D>()),
+        periodic_image_phase_factors_(*periodic_image_phase_factors_ptr_),
+        periodic_image_displacements_(*periodic_image_displacements_ptr_),
+        NL_ptr_(std::make_shared<OffloadIntVector>()),
+        LM_ptr_(std::make_shared<OffloadIntVector>()),
+        NL(*NL_ptr_),
+        LM(*LM_ptr_),
+        ylm_timer_(createGlobalTimer("SoaAtomicBasisSet::Ylm", timer_level_fine)),
+        rnl_timer_(createGlobalTimer("SoaAtomicBasisSet::Rnl", timer_level_fine)),
+        pbc_timer_(createGlobalTimer("SoaAtomicBasisSet::pbc_images", timer_level_fine)),
+        nelec_pbc_timer_(createGlobalTimer("SoaAtomicBasisSet::nelec_pbc_images", timer_level_fine)),
+        phase_timer_(createGlobalTimer("SoaAtomicBasisSet::phase", timer_level_fine)),
+        psi_timer_(createGlobalTimer("SoaAtomicBasisSet::psi", timer_level_fine))
+  {}
 
   void checkInVariables(opt_variables_type& active)
   {
@@ -130,11 +172,16 @@ struct SoaAtomicBasisSetT
      */
   void setPBCParams(const TinyVector<int, 3>& pbc_images,
                     const TinyVector<double, 3> supertwist,
-                    const std::vector<ValueType>& PeriodicImagePhaseFactors)
+                    const OffloadVector& PeriodicImagePhaseFactors,
+                    const OffloadArray2D& PeriodicImageDisplacements)
   {
     PBCImages                    = pbc_images;
     periodic_image_phase_factors = PeriodicImagePhaseFactors;
+    periodic_image_displacements = PeriodicImageDisplacements;
     SuperTwist                   = supertwist;
+
+    periodic_image_phase_factors.updateTo();
+    periodic_image_displacements.updateTo();
   }
 
   /** implement a BasisSetBase virtual function
@@ -696,6 +743,167 @@ struct SoaAtomicBasisSetT
           const ValueType Phase = periodic_image_phase_factors[iter] * correctphase;
           for (size_t ib = 0; ib < BasisSetSize; ++ib)
             psi[ib] += ylm_v[LM[ib]] * phi_r[NL[ib]] * Phase;
+        }
+      }
+    }
+  }
+
+  /**
+   * @brief evaluate for multiple electrons
+   * 
+   * This function should only assign to elements of psi in the range [[0:nElec],[BasisOffset:BasisOffset+BasisSetSize]].
+   * These elements are assumed to be zero when passed to this function.
+   * This function only uses only one center (center_idx) from displ_list
+   * 
+   * @param [in] atom_bs_list multi-walker list of SoaAtomicBasisSet [nWalkers]
+   * @param [in] lattice crystal lattice
+   * @param [in,out] psi wavefunction values for all electrons [nElec, nBasTot]
+   * @param [in] displ_list displacement from each electron to each center [NumCenters, nElec, 3] (flattened)
+   * @param [in] Tv_list translation vectors for computing overall phase factor [NumCenters, nElec, 3] (flattened)
+   * @param [in] nElec number of electrons
+   * @param [in] nBasTot total number of basis functions represented in psi
+   * @param [in] center_idx current center index (for indexing into displ_list)
+   * @param [in] BasisOffset index of first basis function of this center (for indexing into psi)
+   * @param [in] NumCenters total number of centers in system (for indexing into displ_list)
+   *  
+  */
+  template<typename LAT, typename VT>
+  inline void mw_evaluateV(const RefVectorWithLeader<SoaAtomicBasisSetT>& atom_bs_list,
+                           const LAT& lattice,
+                           Array<VT, 2, OffloadPinnedAllocator<VT>>& psi,
+                           const Vector<RealType, OffloadPinnedAllocator<RealType>>& displ_list,
+                           const Vector<RealType, OffloadPinnedAllocator<RealType>>& Tv_list,
+                           const size_t nElec,
+                           const size_t nBasTot,
+                           const size_t center_idx,
+                           const size_t BasisOffset,
+                           const size_t NumCenters)
+  {
+    assert(this == &atom_bs_list.getLeader());
+    auto& atom_bs_leader = atom_bs_list.template getCastedLeader<SoaAtomicBasisSet<ROT, SH>>();
+    //TODO: use QMCTraits::DIM instead of 3?
+    //      DIM==3 is baked into so many parts here that it's probably not worth it for now
+    const int Nx   = PBCImages[0] + 1;
+    const int Ny   = PBCImages[1] + 1;
+    const int Nz   = PBCImages[2] + 1;
+    const int Nxyz = Nx * Ny * Nz;
+    assert(psi.size(0) == nElec);
+    assert(psi.size(1) == nBasTot);
+
+
+    auto& ylm_v = atom_bs_leader.mw_mem_handle_.getResource().ylm_v;
+    auto& rnl_v = atom_bs_leader.mw_mem_handle_.getResource().rnl_v;
+    auto& dr    = atom_bs_leader.mw_mem_handle_.getResource().dr;
+    auto& r     = atom_bs_leader.mw_mem_handle_.getResource().r;
+
+    const size_t nRnl = RnlID.size();
+    const size_t nYlm = Ylm.size();
+
+    ylm_v.resize(nElec, Nxyz, nYlm);
+    rnl_v.resize(nElec, Nxyz, nRnl);
+    dr.resize(nElec, Nxyz, 3);
+    r.resize(nElec, Nxyz);
+
+    // TODO: move these outside?
+    auto& correctphase = atom_bs_leader.mw_mem_handle_.getResource().correctphase;
+    correctphase.resize(nElec);
+
+    auto* dr_ptr = dr.data();
+    auto* r_ptr  = r.data();
+
+    auto* correctphase_ptr = correctphase.data();
+
+    auto* Tv_list_ptr    = Tv_list.data();
+    auto* displ_list_ptr = displ_list.data();
+
+    // need to map Tensor<T,3> vals to device
+    auto* latR_ptr = lattice.R.data();
+
+
+    {
+      ScopedTimer local_timer(phase_timer_);
+#if not defined(QMC_COMPLEX)
+
+      PRAGMA_OFFLOAD("omp target teams distribute parallel for map(to:correctphase_ptr[:nElec]) ")
+      for (size_t i_e = 0; i_e < nElec; i_e++)
+        correctphase_ptr[i_e] = 1.0;
+
+#else
+      auto* SuperTwist_ptr = SuperTwist.data();
+
+      PRAGMA_OFFLOAD("omp target teams distribute parallel for map(to:SuperTwist_ptr[:SuperTwist.size()], \
+		     Tv_list_ptr[3*nElec*center_idx:3*nElec], correctphase_ptr[:nElec]) ")
+      for (size_t i_e = 0; i_e < nElec; i_e++)
+      {
+        //RealType phasearg = dot(3, SuperTwist.data(), 1, Tv_list.data() + 3 * i_e, 1);
+        RealType phasearg = 0;
+        for (size_t i_dim = 0; i_dim < 3; i_dim++)
+          phasearg += SuperTwist[i_dim] * Tv_list_ptr[i_dim + 3 * (i_e + center_idx * nElec)];
+        RealType s, c;
+        qmcplusplus::sincos(-phasearg, &s, &c);
+        correctphase_ptr[i_e] = ValueType(c, s);
+      }
+#endif
+    }
+
+    auto* periodic_image_displacements_ptr = periodic_image_displacements.data();
+    {
+      ScopedTimer local_timer(nelec_pbc_timer_);
+      // FIXME: remove "always" after fixing MW mem to only transfer once ahead of time
+      PRAGMA_OFFLOAD("omp target teams distribute parallel for collapse(2) \
+                      map(always, to:periodic_image_displacements_ptr[:3*Nxyz]) \
+                      map(to: dr_ptr[:3*nElec*Nxyz], r_ptr[:nElec*Nxyz], displ_list_ptr[3*nElec*center_idx:3*nElec]) ")
+      for (size_t i_e = 0; i_e < nElec; i_e++)
+      {
+        for (int i_xyz = 0; i_xyz < Nxyz; i_xyz++)
+        {
+          RealType tmp_r2 = 0.0;
+          for (size_t i_dim = 0; i_dim < 3; i_dim++)
+          {
+            dr_ptr[i_dim + 3 * (i_xyz + Nxyz * i_e)] = -(displ_list_ptr[i_dim + 3 * (i_e + center_idx * nElec)] +
+                                                         periodic_image_displacements_ptr[i_dim + 3 * i_xyz]);
+            tmp_r2 += dr_ptr[i_dim + 3 * (i_xyz + Nxyz * i_e)] * dr_ptr[i_dim + 3 * (i_xyz + Nxyz * i_e)];
+          }
+          r_ptr[i_xyz + Nxyz * i_e] = std::sqrt(tmp_r2);
+        }
+      }
+    }
+
+
+    {
+      ScopedTimer local(rnl_timer_);
+      MultiRnl.batched_evaluate(r, rnl_v, Rmax);
+    }
+    // dr_new is [3 * Nxyz * nElec] realtype
+    {
+      ScopedTimer local(this->ylm_timer_);
+      //Ylm.mw_evaluateV(dr.data(), ylm_v.data(), Nxyz * nElec, nYlm);
+      Ylm.batched_evaluateV(dr, ylm_v);
+    }
+    ///Phase for PBC containing the phase for the nearest image displacement and the correction due to the Distance table.
+    auto* phase_fac_ptr = periodic_image_phase_factors.data();
+    auto* LM_ptr        = LM.data();
+    auto* NL_ptr        = NL.data();
+    auto* psi_ptr       = psi.data();
+
+    auto* ylm_ptr = ylm_v.data();
+    auto* rnl_ptr = rnl_v.data();
+    {
+      ScopedTimer local_timer(this->psi_timer_);
+      // FIXME: remove "always" after fixing MW mem to only transfer once ahead of time
+      PRAGMA_OFFLOAD("omp target teams distribute parallel for collapse(2) \
+          map(always, to:phase_fac_ptr[:Nxyz], LM_ptr[:BasisSetSize], NL_ptr[:BasisSetSize]) \
+		      map(to:ylm_ptr[:nYlm*nElec*Nxyz], rnl_ptr[:nRnl*nElec*Nxyz], psi_ptr[:nBasTot*nElec], correctphase_ptr[:nElec])")
+      for (size_t i_e = 0; i_e < nElec; i_e++)
+      {
+        for (size_t ib = 0; ib < BasisSetSize; ++ib)
+        {
+          for (size_t i_xyz = 0; i_xyz < Nxyz; i_xyz++)
+          {
+            const ValueType Phase = phase_fac_ptr[i_xyz] * correctphase_ptr[i_e];
+            psi_ptr[BasisOffset + ib + i_e * nBasTot] += ylm_ptr[(i_xyz + Nxyz * i_e) * nYlm + LM_ptr[ib]] *
+                rnl_ptr[(i_xyz + Nxyz * i_e) * nRnl + NL_ptr[ib]] * Phase;
+          }
         }
       }
     }

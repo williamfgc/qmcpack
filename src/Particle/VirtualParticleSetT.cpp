@@ -105,13 +105,13 @@ void VirtualParticleSetT<T>::releaseResource(ResourceCollection& collection,
 }
 
 template<typename T>
-const RefVectorWithLeader<const DistanceTableABT> VirtualParticleSetT<T>::extractDTRefList(
-    const RefVectorWithLeader<const VirtualParticleSetT>& vp_list,
+const RefVectorWithLeader<const DistanceTableABT<T>> VirtualParticleSetT<T>::extractDTRefList(
+    const RefVectorWithLeader<const VirtualParticleSetT<T>>& vp_list,
     int id)
 {
-  RefVectorWithLeader<const DistanceTableABT> dt_list(vp_list.template getLeader().getDistTableAB(id));
+  RefVectorWithLeader<const DistanceTableABT<T>> dt_list(vp_list.getLeader().getDistTableAB(id));
   dt_list.reserve(vp_list.size());
-  for (const VirtualParticleSet& vp : vp_list)
+  for (const VirtualParticleSetT<T>& vp : vp_list)
   {
     const auto& d_table = vp.getDistTableAB(id);
     dt_list.push_back(d_table);
@@ -120,9 +120,10 @@ const RefVectorWithLeader<const DistanceTableABT> VirtualParticleSetT<T>::extrac
 }
 
 template<typename T>
-const std::vector<PosType> extractVPCoords(const RefVectorWithLeader<const VirtualParticleSetT>& vp_list)
+const std::vector<typename VirtualParticleSetT<T>::PosType> extractVPCoords(
+    const RefVectorWithLeader<const VirtualParticleSetT<T>>& vp_list)
 {
-  std::vector<PosType> coords_list;
+  std::vector<typename VirtualParticleSetT<T>::PosType> coords_list;
   for (const VirtualParticleSetT<T>& vp : vp_list)
     for (int iat = 0; iat < vp.getTotalNum(); iat++)
       coords_list.push_back(vp.R[iat]);

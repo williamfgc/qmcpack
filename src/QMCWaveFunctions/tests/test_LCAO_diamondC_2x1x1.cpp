@@ -33,7 +33,7 @@ namespace qmcplusplus
 
 void test_LCAO_DiamondC_2x1x1_real()
 {
-  using VT       = SPOSet::ValueType;
+  using VT       = SPOSet<T>::ValueType;
   Communicate* c = OHMMS::Controller;
 
   const char* particles = R"(<simulationcell>
