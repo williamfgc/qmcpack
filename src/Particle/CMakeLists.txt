@@ -13,31 +13,22 @@
 # create libqmcparticle
 ####################################
 set(PARTICLE
-    InitMolecularSystem.cpp
-    SimulationCell.cpp
+    InitMolecularSystemT.cpp
     SimulationCellT.cpp
-    ParticleSetPool.cpp
-    ParticleSet.cpp
+    ParticleSetPoolT.cpp
     ParticleSetT.cpp
     PSdispatcher.cpp
-    VirtualParticleSet.cpp
     VirtualParticleSetT.cpp
-    ParticleSet.BC.cpp
     DynamicCoordinatesBuilder.cpp
     DynamicCoordinatesT.cpp
-    MCCoords.cpp
     MCCoordsT.cpp
-    MCWalkerConfiguration.cpp
-    WalkerConfigurations.cpp
+    MCWalkerConfigurationT.cpp
+    WalkerConfigurationsT.cpp
     SpeciesSet.cpp
-    SampleStack.cpp
-    createDistanceTableAA.cpp
-    createDistanceTableAB.cpp
+    SampleStackT.cpp
     createDistanceTableT.cpp
     HDFWalkerInputManager.cpp
-    LongRange/KContainer.cpp
     LongRange/KContainerT.cpp
-    LongRange/StructFact.cpp
     LongRange/StructFactT.cpp
     LongRange/LPQHIBasis.cpp
     LongRange/LPQHISRCoulombBasis.cpp
@@ -59,15 +50,9 @@ target_include_directories(qmcparticle PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 target_link_libraries(qmcparticle PRIVATE platform_cpu_LA)
 target_link_libraries(qmcparticle PUBLIC qmcnumerics qmcutil platform_runtime)
 set(PARTICLE_OMPTARGET_SRCS
-    createDistanceTableTOMPTarget.cpp
-    createDistanceTableAAOMPTarget.cpp
-    createDistanceTableABOMPTarget.cpp)
+    createDistanceTableTOMPTarget.cpp)
 
-if(USE_OBJECT_TARGET)
-  add_library(qmcparticle_omptarget OBJECT ${PARTICLE_OMPTARGET_SRCS})
-else(USE_OBJECT_TARGET)
-  add_library(qmcparticle_omptarget ${PARTICLE_OMPTARGET_SRCS})
-endif(USE_OBJECT_TARGET)
+add_library(qmcparticle_omptarget OBJECT ${PARTICLE_OMPTARGET_SRCS})
 
 target_include_directories(qmcparticle_omptarget PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 target_link_libraries(qmcparticle_omptarget PUBLIC qmcutil containers)

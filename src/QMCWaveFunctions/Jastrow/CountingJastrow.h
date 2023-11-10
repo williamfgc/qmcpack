@@ -16,6 +16,7 @@
 #include "Particle/ParticleSet.h"
 #include "QMCWaveFunctions/WaveFunctionComponent.h"
 #include "QMCWaveFunctions/Jastrow/CountingGaussianRegion.h"
+#include "QMCWaveFunctions/OptimizableObject.h"
 
 namespace qmcplusplus
 {
@@ -218,9 +219,9 @@ public:
   }
 
 
-  LogValueType evaluateLog(const ParticleSet& P,
-                           ParticleSet::ParticleGradient& G,
-                           ParticleSet::ParticleLaplacian& L) override
+  LogValue evaluateLog(const ParticleSet& P,
+                       ParticleSet::ParticleGradient& G,
+                       ParticleSet::ParticleLaplacian& L) override
   {
     evaluateExponents(P);
     for (int i = 0; i < num_els; ++i)
@@ -385,11 +386,11 @@ public:
     return Jgrad[iat];
   }
 
-  PsiValueType ratioGrad(ParticleSet& P, int iat, GradType& grad_iat) override
+  PsiValue ratioGrad(ParticleSet& P, int iat, GradType& grad_iat) override
   {
     evaluateTempExponents(P, iat);
     grad_iat += Jgrad_t[iat];
-    return std::exp(static_cast<PsiValueType>(Jval_t - Jval));
+    return std::exp(static_cast<PsiValue>(Jval_t - Jval));
   }
 
   void acceptMove(ParticleSet& P, int iat, bool safe_to_delay = false) override
@@ -415,15 +416,15 @@ public:
 
   void restore(int iat) override { C->restore(iat); }
 
-  PsiValueType ratio(ParticleSet& P, int iat) override
+  PsiValue ratio(ParticleSet& P, int iat) override
   {
     evaluateTempExponents(P, iat);
-    return std::exp(static_cast<PsiValueType>(Jval_t - Jval));
+    return std::exp(static_cast<PsiValue>(Jval_t - Jval));
   }
 
   void registerData(ParticleSet& P, WFBufferType& buf) override
   {
-    LogValueType logValue = evaluateLog(P, P.G, P.L);
+    LogValue logValue     = evaluateLog(P, P.G, P.L);
     RealType* Jlap_begin  = &Jlap[0];
     RealType* Jlap_end    = Jlap_begin + Jlap.size();
     RealType* Jgrad_begin = &Jgrad[0][0];
@@ -435,9 +436,9 @@ public:
     DEBUG_PSIBUFFER(" CountingJastrow::registerData", buf.current());
   }
 
-  LogValueType updateBuffer(ParticleSet& P, WFBufferType& buf, bool fromscratch = false) override
+  LogValue updateBuffer(ParticleSet& P, WFBufferType& buf, bool fromscratch = false) override
   {
-    LogValueType logValue = evaluateLog(P, P.G, P.L);
+    LogValue logValue     = evaluateLog(P, P.G, P.L);
     RealType* Jlap_begin  = &Jlap[0];
     RealType* Jlap_end    = Jlap_begin + Jlap.size();
     RealType* Jgrad_begin = &Jgrad[0][0];

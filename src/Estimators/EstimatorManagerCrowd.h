@@ -22,6 +22,7 @@
 #include "Estimators/EstimatorManagerNew.h"
 #include "Particle/Walker.h"
 #include "OhmmsPETE/OhmmsVector.h"
+#include "Particle/MCWalkerConfiguration.h"
 
 namespace qmcplusplus
 {
@@ -38,7 +39,7 @@ class QMCHamiltonian;
 class EstimatorManagerCrowd
 {
 public:
-  using MCPWalker = Walker<QMCTraits, PtclOnLatticeTraits>;
+  using MCPWalker = MCWalkerConfiguration::Walker_t;
   using RealType  = EstimatorManagerNew::RealType;
   using FullPrecRealType = EstimatorManagerNew::FullPrecRealType;
 
@@ -64,6 +65,7 @@ public:
    *  \param[in]     walkers         walkers in crowd
    *  \param[in]     psets           walker particle sets
    *  \param[in]     wfns            walker wavefunctions
+   *  \param[in]     hams            walker Hamiltonians
    *  \param[inout]  rng             crowd scope RandomGenerator
    *
    *  walkers is especially questionable since its really just hiding the full sweep hamiltonian values from
@@ -78,6 +80,7 @@ public:
   void accumulate(const RefVector<MCPWalker>& walkers,
                   const RefVector<ParticleSet>& psets,
                   const RefVector<TrialWaveFunction>& wfns,
+                  const RefVector<QMCHamiltonian>& hams,
                   RandomBase<FullPrecRealType>& rng);
 
   ScalarEstimatorBase& get_main_estimator() { return *main_estimator_; }

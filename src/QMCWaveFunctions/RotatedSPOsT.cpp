@@ -1,17 +1,18 @@
 //////////////////////////////////////////////////////////////////////////////////////
-//// This file is distributed under the University of Illinois/NCSA Open Source
-/// License. / See LICENSE file in top directory for details.
-////
-//// Copyright (c) QMCPACK developers.
-////
-//// File developed by: Sergio D. Pineda Flores,
-/// sergio_pinedaflores@berkeley.edu, University of California, Berkeley / Eric
-/// Neuscamman, eneuscamman@berkeley.edu, University of California, Berkeley /
-/// Ye Luo, yeluo@anl.gov, Argonne National Laboratory
-////
-//// File created by: Sergio D. Pineda Flores, sergio_pinedaflores@berkeley.edu,
-/// University of California, Berkeley
-////////////////////////////////////////////////////////////////////////////////////////
+// This file is distributed under the University of Illinois/NCSA Open Source
+// License. See LICENSE file in top directory for details.
+//
+// Copyright (c) 2022 QMCPACK developers
+//
+// File developed by: Sergio D. Pineda Flores, sergio_pinedaflores@berkeley.edu,
+// University of California, Berkeley
+//                    Eric Neuscamman, eneuscamman@berkeley.edu, University of
+//                    California, Berkeley Ye Luo, yeluo@anl.gov, Argonne
+//                    National Laboratory
+// File created by:  Sergio D. Pineda Flores, sergio_pinedaflores@berkeley.edu,
+// University of California, Berkeley
+//////////////////////////////////////////////////////////////////////////////////////
+
 #include "RotatedSPOsT.h"
 
 #include "CPU/BLAS.hpp"
@@ -121,7 +122,7 @@ RotatedSPOsT<T>::extractParamsFromAntiSymmetricMatrix(
 
 template <typename T>
 void
-RotatedSPOsT<T>::resetParametersExclusive(const OptVariablesType<T>& active)
+RotatedSPOsT<T>::resetParametersExclusive(const OptVariablesTypeT<T>& active)
 {
     std::vector<RealType> delta_param(m_act_rot_inds.size());
 
@@ -309,7 +310,6 @@ template <typename T>
 void
 RotatedSPOsT<T>::buildOptVariables(const size_t nel)
 {
-#if !defined(QMC_COMPLEX)
     /* Only rebuild optimized variables if more after-rotation orbitals are
      * needed Consider ROHF, there is only one set of SPO for both spin up and
      * down Nup > Ndown. nel_major_ will be set Nup.
@@ -334,7 +334,6 @@ RotatedSPOsT<T>::buildOptVariables(const size_t nel)
 
         buildOptVariables(created_m_act_rot_inds, created_full_rot_inds);
     }
-#endif
 }
 
 template <typename T>
@@ -342,7 +341,6 @@ void
 RotatedSPOsT<T>::buildOptVariables(
     const RotationIndices& rotations, const RotationIndices& full_rotations)
 {
-#if !defined(QMC_COMPLEX)
     const size_t nmo = Phi->getOrbitalSetSize();
 
     // create active rotations
@@ -421,7 +419,6 @@ RotatedSPOsT<T>::buildOptVariables(
             param[i] = this->myVars[i];
         apply_rotation(param, false);
     }
-#endif
 }
 
 template <typename T>
@@ -437,10 +434,10 @@ RotatedSPOsT<T>::apply_rotation(
     constructAntiSymmetricMatrix(m_act_rot_inds, param, rot_mat);
 
     /*
-        rot_mat is now an anti-hermitian matrix. Now we convert
-        it into a unitary matrix via rot_mat = exp(-rot_mat).
-        Finally, apply unitary matrix to orbs.
-      */
+          rot_mat is now an anti-hermitian matrix. Now we convert
+          it into a unitary matrix via rot_mat = exp(-rot_mat).
+          Finally, apply unitary matrix to orbs.
+        */
     exponentiate_antisym_matrix(rot_mat);
     {
         ScopedTimer local(apply_rotation_timer_);
@@ -512,10 +509,10 @@ RotatedSPOsT<T>::applyFullRotation(
     constructAntiSymmetricMatrix(m_full_rot_inds, full_param, rot_mat);
 
     /*
-        rot_mat is now an anti-hermitian matrix. Now we convert
-        it into a unitary matrix via rot_mat = exp(-rot_mat).
-        Finally, apply unitary matrix to orbs.
-      */
+          rot_mat is now an anti-hermitian matrix. Now we convert
+          it into a unitary matrix via rot_mat = exp(-rot_mat).
+          Finally, apply unitary matrix to orbs.
+        */
     exponentiate_antisym_matrix(rot_mat);
     Phi->applyRotation(rot_mat, use_stored_copy);
 }
@@ -673,7 +670,7 @@ RotatedSPOsT<T>::log_antisym_matrix(const ValueMatrix& mat, ValueMatrix& output)
 template <typename T>
 void
 RotatedSPOsT<T>::evaluateDerivRatios(const VirtualParticleSetT<T>& VP,
-    const OptVariablesType<T>& optvars, ValueVector& psi,
+    const OptVariablesTypeT<T>& optvars, ValueVector& psi,
     const ValueVector& psiinv, std::vector<T>& ratios, Matrix<T>& dratios,
     int FirstIndex, int LastIndex)
 {
@@ -755,7 +752,7 @@ RotatedSPOsT<T>::evaluateDerivRatios(const VirtualParticleSetT<T>& VP,
 template <typename T>
 void
 RotatedSPOsT<T>::evaluateDerivativesWF(ParticleSetT<T>& P,
-    const OptVariablesType<T>& optvars, Vector<T>& dlogpsi, int FirstIndex,
+    const OptVariablesTypeT<T>& optvars, Vector<T>& dlogpsi, int FirstIndex,
     int LastIndex)
 {
     const size_t nel = LastIndex - FirstIndex;
@@ -804,7 +801,7 @@ RotatedSPOsT<T>::evaluateDerivativesWF(ParticleSetT<T>& P,
 template <typename T>
 void
 RotatedSPOsT<T>::evaluateDerivatives(ParticleSetT<T>& P,
-    const OptVariablesType<T>& optvars, Vector<T>& dlogpsi,
+    const OptVariablesTypeT<T>& optvars, Vector<T>& dlogpsi,
     Vector<T>& dhpsioverpsi, const int& FirstIndex, const int& LastIndex)
 {
     const size_t nel = LastIndex - FirstIndex;
@@ -866,33 +863,32 @@ RotatedSPOsT<T>::evaluateDerivatives(ParticleSetT<T>& P,
     // possibly replace wit BLAS calls
     for (int i = 0; i < nel; i++)
         for (int j = 0; j < nmo; j++)
-            Bbar(i, j) = d2psiM_all(i, j) +
-                2.0 * dot(myG_J[i], dpsiM_all(i, j)) +
+            Bbar(i, j) = d2psiM_all(i, j) + 2 * dot(myG_J[i], dpsiM_all(i, j)) +
                 myL_J[i] * psiM_all(i, j);
 
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~PART2
-    const T* const A(psiM_all.data());
-    const T* const Ainv(psiM_inv.data());
-    const T* const B(Bbar.data());
-    ValueMatrix T_mat;
+    const ValueType* const A(psiM_all.data());
+    const ValueType* const Ainv(psiM_inv.data());
+    const ValueType* const B(Bbar.data());
+    ValueMatrix t;
     ValueMatrix Y1;
     ValueMatrix Y2;
     ValueMatrix Y3;
     ValueMatrix Y4;
-    T_mat.resize(nel, nmo);
+    t.resize(nel, nmo);
     Y1.resize(nel, nel);
     Y2.resize(nel, nmo);
     Y3.resize(nel, nmo);
     Y4.resize(nel, nmo);
 
-    BLAS::gemm('N', 'N', nmo, nel, nel, T(1.0), A, nmo, Ainv, nel, T(0.0),
-        T_mat.data(), nmo);
-    BLAS::gemm('N', 'N', nel, nel, nel, T(1.0), B, nmo, Ainv, nel, T(0.0),
-        Y1.data(), nel);
-    BLAS::gemm('N', 'N', nmo, nel, nel, T(1.0), T_mat.data(), nmo, Y1.data(),
-        nel, T(0.0), Y2.data(), nmo);
-    BLAS::gemm('N', 'N', nmo, nel, nel, T(1.0), B, nmo, Ainv, nel, T(0.0),
-        Y3.data(), nmo);
+    BLAS::gemm('N', 'N', nmo, nel, nel, ValueType(1.0), A, nmo, Ainv, nel,
+        ValueType(0.0), t.data(), nmo);
+    BLAS::gemm('N', 'N', nel, nel, nel, ValueType(1.0), B, nmo, Ainv, nel,
+        ValueType(0.0), Y1.data(), nel);
+    BLAS::gemm('N', 'N', nmo, nel, nel, ValueType(1.0), t.data(), nmo,
+        Y1.data(), nel, ValueType(0.0), Y2.data(), nmo);
+    BLAS::gemm('N', 'N', nmo, nel, nel, ValueType(1.0), B, nmo, Ainv, nel,
+        ValueType(0.0), Y3.data(), nmo);
 
     // possibly replace with BLAS call
     Y4 = Y3 - Y2;
@@ -902,8 +898,8 @@ RotatedSPOsT<T>::evaluateDerivatives(ParticleSetT<T>& P,
         if (kk >= 0) {
             const int p = m_act_rot_inds.at(i).first;
             const int q = m_act_rot_inds.at(i).second;
-            dlogpsi[kk] += T_mat(p, q);
-            dhpsioverpsi[kk] += T(-0.5) * Y4(p, q);
+            dlogpsi[kk] += t(p, q);
+            dhpsioverpsi[kk] += ValueType(-0.5) * Y4(p, q);
         }
     }
 }
@@ -911,7 +907,7 @@ RotatedSPOsT<T>::evaluateDerivatives(ParticleSetT<T>& P,
 template <typename T>
 void
 RotatedSPOsT<T>::evaluateDerivatives(ParticleSetT<T>& P,
-    const OptVariablesType<T>& optvars, Vector<T>& dlogpsi,
+    const OptVariablesTypeT<T>& optvars, Vector<T>& dlogpsi,
     Vector<T>& dhpsioverpsi, const T& psiCurrent, const std::vector<T>& Coeff,
     const std::vector<size_t>& C2node_up, const std::vector<size_t>& C2node_dn,
     const ValueVector& detValues_up, const ValueVector& detValues_dn,
@@ -986,8 +982,8 @@ RotatedSPOsT<T>::evaluateDerivatives(ParticleSetT<T>& P,
 template <typename T>
 void
 RotatedSPOsT<T>::evaluateDerivativesWF(ParticleSetT<T>& P,
-    const OptVariablesType<T>& optvars, Vector<ValueType>& dlogpsi,
-    const ValueType& psiCurrent, const std::vector<ValueType>& Coeff,
+    const OptVariablesTypeT<T>& optvars, Vector<ValueType>& dlogpsi,
+    const FullValueType& psiCurrent, const std::vector<ValueType>& Coeff,
     const std::vector<size_t>& C2node_up, const std::vector<size_t>& C2node_dn,
     const ValueVector& detValues_up, const ValueVector& detValues_dn,
     const ValueMatrix& M_up, const ValueMatrix& M_dn,
@@ -1702,8 +1698,8 @@ RotatedSPOsT<T>::mw_evaluateDetRatios(
     const RefVectorWithLeader<SPOSetT<T>>& spo_list,
     const RefVectorWithLeader<const VirtualParticleSetT<T>>& vp_list,
     const RefVector<ValueVector>& psi_list,
-    const std::vector<const T*>& invRow_ptr_list,
-    std::vector<std::vector<T>>& ratios_list) const
+    const std::vector<const ValueType*>& invRow_ptr_list,
+    std::vector<std::vector<ValueType>>& ratios_list) const
 {
     auto phi_list = extractPhiRefList(spo_list);
     auto& leader = phi_list.getLeader();
@@ -1758,8 +1754,9 @@ void
 RotatedSPOsT<T>::mw_evaluateVGLandDetRatioGrads(
     const RefVectorWithLeader<SPOSetT<T>>& spo_list,
     const RefVectorWithLeader<ParticleSetT<T>>& P_list, int iat,
-    const std::vector<const T*>& invRow_ptr_list, OffloadMWVGLArray& phi_vgl_v,
-    std::vector<T>& ratios, std::vector<GradType>& grads) const
+    const std::vector<const ValueType*>& invRow_ptr_list,
+    OffloadMWVGLArray& phi_vgl_v, std::vector<ValueType>& ratios,
+    std::vector<GradType>& grads) const
 {
     auto phi_list = extractPhiRefList(spo_list);
     auto& leader = phi_list.getLeader();
@@ -1772,9 +1769,9 @@ void
 RotatedSPOsT<T>::mw_evaluateVGLandDetRatioGradsWithSpin(
     const RefVectorWithLeader<SPOSetT<T>>& spo_list,
     const RefVectorWithLeader<ParticleSetT<T>>& P_list, int iat,
-    const std::vector<const T*>& invRow_ptr_list, OffloadMWVGLArray& phi_vgl_v,
-    std::vector<T>& ratios, std::vector<GradType>& grads,
-    std::vector<T>& spingrads) const
+    const std::vector<const ValueType*>& invRow_ptr_list,
+    OffloadMWVGLArray& phi_vgl_v, std::vector<ValueType>& ratios,
+    std::vector<GradType>& grads, std::vector<ValueType>& spingrads) const
 {
     auto phi_list = extractPhiRefList(spo_list);
     auto& leader = phi_list.getLeader();
@@ -1829,13 +1826,13 @@ RefVectorWithLeader<SPOSetT<T>>
 RotatedSPOsT<T>::extractPhiRefList(
     const RefVectorWithLeader<SPOSetT<T>>& spo_list)
 {
-    auto& spo_leader = spo_list.template getCastedLeader<RotatedSPOsT<T>>();
+    auto& spo_leader = spo_list.template getCastedLeader<RotatedSPOsT>();
     const auto nw = spo_list.size();
     RefVectorWithLeader<SPOSetT<T>> phi_list(*spo_leader.Phi);
     phi_list.reserve(nw);
     for (int iw = 0; iw < nw; iw++) {
-        RotatedSPOsT<T>& rot =
-            spo_list.template getCastedElement<RotatedSPOsT<T>>(iw);
+        RotatedSPOsT& rot =
+            spo_list.template getCastedElement<RotatedSPOsT>(iw);
         phi_list.emplace_back(*rot.Phi);
     }
     return phi_list;

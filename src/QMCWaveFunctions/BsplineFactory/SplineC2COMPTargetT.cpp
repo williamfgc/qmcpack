@@ -9,33 +9,33 @@
 // File created by: Ye Luo, yeluo@anl.gov, Argonne National Laboratory
 //////////////////////////////////////////////////////////////////////////////////////
 
-
 #include "SplineC2COMPTargetT.h"
-#include "spline2/MultiBsplineEval.hpp"
-#include "spline2/MultiBsplineEval_OMPoffload.hpp"
-#include "QMCWaveFunctions/BsplineFactory/contraction_helper.hpp"
-#include "Platforms/OMPTarget/ompReductionComplex.hpp"
+
 #include "ApplyPhaseC2C.hpp"
 #include "Concurrency/OpenMP.h"
+#include "Platforms/OMPTarget/ompReductionComplex.hpp"
+#include "QMCWaveFunctions/BsplineFactory/contraction_helper.hpp"
+#include "spline2/MultiBsplineEval.hpp"
+#include "spline2/MultiBsplineEval_OMPoffload.hpp"
 
 namespace qmcplusplus
 {
-template<typename ST>
-SplineC2COMPTargetT<ST>::SplineC2COMPTargetT(const SplineC2COMPTargetT& in) = default;
+template<typename ST, typename VT>
+SplineC2COMPTargetT<ST, VT>::SplineC2COMPTargetT(const SplineC2COMPTargetT& in) = default;
 
-template<typename ST>
-inline void SplineC2COMPTargetT<ST>::set_spline(SingleSplineType* spline_r,
-                                               SingleSplineType* spline_i,
-                                               int twist,
-                                               int ispline,
-                                               int level)
+template<typename ST, typename VT>
+inline void SplineC2COMPTargetT<ST, VT>::set_spline(SingleSplineType* spline_r,
+                                                    SingleSplineType* spline_i,
+                                                    int twist,
+                                                    int ispline,
+                                                    int level)
 {
   SplineInst->copy_spline(spline_r, 2 * ispline);
   SplineInst->copy_spline(spline_i, 2 * ispline + 1);
 }
 
-template<typename ST>
-bool SplineC2COMPTargetT<ST>::read_splines(hdf_archive& h5f)
+template<typename ST, typename VT>
+bool SplineC2COMPTargetT<ST, VT>::read_splines(hdf_archive& h5f)
 {
   std::ostringstream o;
   o << "spline_" << this->MyIndex;
@@ -43,8 +43,8 @@ bool SplineC2COMPTargetT<ST>::read_splines(hdf_archive& h5f)
   return h5f.readEntry(bigtable, o.str().c_str()); //"spline_0");
 }
 
-template<typename ST>
-bool SplineC2COMPTargetT<ST>::write_splines(hdf_archive& h5f)
+template<typename ST, typename VT>
+bool SplineC2COMPTargetT<ST, VT>::write_splines(hdf_archive& h5f)
 {
   std::ostringstream o;
   o << "spline_" << this->MyIndex;
@@ -52,12 +52,12 @@ bool SplineC2COMPTargetT<ST>::write_splines(hdf_archive& h5f)
   return h5f.writeEntry(bigtable, o.str().c_str()); //"spline_0");
 }
 
-template<typename ST>
-inline void SplineC2COMPTargetT<ST>::assign_v(const PointType& r,
-                                             const vContainer_type& myV,
-                                             ValueVector& psi,
-                                             int first,
-                                             int last) const
+template<typename ST, typename VT>
+inline void SplineC2COMPTargetT<ST, VT>::assign_v(const PointType& r,
+                                                  const vContainer_type& myV,
+                                                  ValueVector& psi,
+                                                  int first,
+                                                  int last) const
 {
   // protect last
   last = last > this->kPoints.size() ? this->kPoints.size() : last;
@@ -77,8 +77,8 @@ inline void SplineC2COMPTargetT<ST>::assign_v(const PointType& r,
   }
 }
 
-template<typename ST>
-void SplineC2COMPTargetT<ST>::evaluateValue(const ParticleSetT<ComplexT>& P, const int iat, ValueVector& psi)
+template<typename ST, typename VT>
+void SplineC2COMPTargetT<ST, VT>::evaluateValue(const ParticleSetT<VT>& P, const int iat, ValueVector& psi)
 {
   const PointType& r = P.activeR(iat);
   PointType ru(PrimLattice.toUnit_floor(r));
@@ -86,7 +86,8 @@ void SplineC2COMPTargetT<ST>::evaluateValue(const ParticleSetT<ComplexT>& P, con
 #pragma omp parallel
   {
     int first, last;
-    // Factor of 2 because psi is complex and the spline storage and evaluation uses a real type
+    // Factor of 2 because psi is complex and the spline storage and
+    // evaluation uses a real type
     FairDivideAligned(2 * psi.size(), getAlignment<ST>(), omp_get_num_threads(), omp_get_thread_num(), first, last);
 
     spline2::evaluate3d(SplineInst->getSplinePtr(), ru, myV, first, last);
@@ -94,11 +95,11 @@ void SplineC2COMPTargetT<ST>::evaluateValue(const ParticleSetT<ComplexT>& P, con
   }
 }
 
-template<typename ST>
-void SplineC2COMPTargetT<ST>::evaluateDetRatios(const VirtualParticleSetT<ComplexT>& VP,
-                                               ValueVector& psi,
-                                               const ValueVector& psiinv,
-                                               std::vector<ValueType>& ratios)
+template<typename ST, typename VT>
+void SplineC2COMPTargetT<ST, VT>::evaluateDetRatios(const VirtualParticleSetT<VT>& VP,
+                                                    ValueVector& psi,
+                                                    const ValueVector& psiinv,
+                                                    std::vector<ValueType>& ratios)
 {
   const int nVP = VP.getTotalNum();
   psiinv_pos_copy.resize(psiinv.size() + nVP * 3);
@@ -186,15 +187,16 @@ void SplineC2COMPTargetT<ST>::evaluateDetRatios(const VirtualParticleSetT<Comple
   }
 }
 
-template<typename ST>
-void SplineC2COMPTargetT<ST>::mw_evaluateDetRatios(const RefVectorWithLeader<SPOSet>& spo_list,
-                                                  const RefVectorWithLeader<const VirtualParticleSetT<ComplexT>>& vp_list,
-                                                  const RefVector<ValueVector>& psi_list,
-                                                  const std::vector<const ValueType*>& invRow_ptr_list,
-                                                  std::vector<std::vector<ValueType>>& ratios_list) const
+template<typename ST, typename VT>
+void SplineC2COMPTargetT<ST, VT>::mw_evaluateDetRatios(
+    const RefVectorWithLeader<SPOSetT<VT>>& spo_list,
+    const RefVectorWithLeader<const VirtualParticleSetT<VT>>& vp_list,
+    const RefVector<ValueVector>& psi_list,
+    const std::vector<const ValueType*>& invRow_ptr_list,
+    std::vector<std::vector<ValueType>>& ratios_list) const
 {
   assert(this == &spo_list.getLeader());
-  auto& phi_leader            = spo_list.template getCastedLeader<SplineC2COMPTargetT<ST>>();
+  auto& phi_leader            = spo_list.template getCastedLeader<SplineC2COMPTargetT>();
   auto& mw_mem                = phi_leader.mw_mem_handle_.getResource();
   auto& det_ratios_buffer_H2D = mw_mem.det_ratios_buffer_H2D;
   auto& mw_ratios_private     = mw_mem.mw_ratios_private;
@@ -204,7 +206,7 @@ void SplineC2COMPTargetT<ST>::mw_evaluateDetRatios(const RefVectorWithLeader<SPO
   const size_t orb_size       = phi_leader.size();
 
   size_t mw_nVP = 0;
-  for (const VirtualParticleSetT<ComplexT>& VP : vp_list)
+  for (const VirtualParticleSetT<VT>& VP : vp_list)
     mw_nVP += VP.getTotalNum();
 
   const size_t packed_size = nw * sizeof(ValueType*) + mw_nVP * (6 * sizeof(ST) + sizeof(int));
@@ -222,7 +224,7 @@ void SplineC2COMPTargetT<ST>::mw_evaluateDetRatios(const RefVectorWithLeader<SPO
   size_t iVP = 0;
   for (size_t iw = 0; iw < nw; iw++)
   {
-    const VirtualParticleSetT<ComplexT>& VP = vp_list[iw];
+    const VirtualParticleSetT<VT>& VP = vp_list[iw];
     assert(ratios_list[iw].size() == VP.getTotalNum());
     for (size_t iat = 0; iat < VP.getTotalNum(); ++iat, ++iVP)
     {
@@ -311,13 +313,14 @@ void SplineC2COMPTargetT<ST>::mw_evaluateDetRatios(const RefVectorWithLeader<SPO
   }
 }
 
-/** assign_vgl_from_l can be used when myL is precomputed and myV,myG,myL in cartesian
-   */
-template<typename ST>
-inline void SplineC2COMPTargetT<ST>::assign_vgl_from_l(const PointType& r,
-                                                      ValueVector& psi,
-                                                      GradVector& dpsi,
-                                                      ValueVector& d2psi)
+/** assign_vgl_from_l can be used when myL is precomputed and myV,myG,myL in
+ * cartesian
+ */
+template<typename ST, typename VT>
+inline void SplineC2COMPTargetT<ST, VT>::assign_vgl_from_l(const PointType& r,
+                                                           ValueVector& psi,
+                                                           GradVector& dpsi,
+                                                           ValueVector& d2psi)
 {
   constexpr ST two(2);
   const ST x = r[0], y = r[1], z = r[2];
@@ -343,11 +346,11 @@ inline void SplineC2COMPTargetT<ST>::assign_vgl_from_l(const PointType& r,
     const ST val_r = myV[jr];
     const ST val_i = myV[ji];
 
-    //phase
+    // phase
     ST s, c;
     omptarget::sincos(-(x * kX + y * kY + z * kZ), &s, &c);
 
-    //dot(PrimLattice.G,myG[j])
+    // dot(PrimLattice.G,myG[j])
     const ST dX_r = g0[jr];
     const ST dY_r = g1[jr];
     const ST dZ_r = g2[jr];
@@ -376,12 +379,12 @@ inline void SplineC2COMPTargetT<ST>::assign_vgl_from_l(const PointType& r,
   }
 }
 
-template<typename ST>
-void SplineC2COMPTargetT<ST>::evaluateVGL(const ParticleSetT<ComplexT>& P,
-                                         const int iat,
-                                         ValueVector& psi,
-                                         GradVector& dpsi,
-                                         ValueVector& d2psi)
+template<typename ST, typename VT>
+void SplineC2COMPTargetT<ST, VT>::evaluateVGL(const ParticleSetT<VT>& P,
+                                              const int iat,
+                                              ValueVector& psi,
+                                              GradVector& dpsi,
+                                              ValueVector& d2psi)
 {
   const PointType& r = P.activeR(iat);
   PointType ru(PrimLattice.toUnit_floor(r));
@@ -461,13 +464,14 @@ void SplineC2COMPTargetT<ST>::evaluateVGL(const ParticleSetT<ComplexT>& P,
   }
 }
 
-template<typename ST>
-void SplineC2COMPTargetT<ST>::evaluateVGLMultiPos(const Vector<ST, OffloadPinnedAllocator<ST>>& multi_pos,
-                                                 Vector<ST, OffloadPinnedAllocator<ST>>& offload_scratch,
-                                                 Vector<ComplexT, OffloadPinnedAllocator<ComplexT>>& results_scratch,
-                                                 const RefVector<ValueVector>& psi_v_list,
-                                                 const RefVector<GradVector>& dpsi_v_list,
-                                                 const RefVector<ValueVector>& d2psi_v_list) const
+template<typename ST, typename VT>
+void SplineC2COMPTargetT<ST, VT>::evaluateVGLMultiPos(
+    const Vector<ST, OffloadPinnedAllocator<ST>>& multi_pos,
+    Vector<ST, OffloadPinnedAllocator<ST>>& offload_scratch,
+    Vector<ComplexT, OffloadPinnedAllocator<ComplexT>>& results_scratch,
+    const RefVector<ValueVector>& psi_v_list,
+    const RefVector<GradVector>& dpsi_v_list,
+    const RefVector<ValueVector>& d2psi_v_list) const
 {
   const size_t num_pos          = psi_v_list.size();
   const size_t ChunkSizePerTeam = 512;
@@ -557,16 +561,16 @@ void SplineC2COMPTargetT<ST>::evaluateVGLMultiPos(const Vector<ST, OffloadPinned
   }
 }
 
-template<typename ST>
-void SplineC2COMPTargetT<ST>::mw_evaluateVGL(const RefVectorWithLeader<SPOSet>& sa_list,
-                                            const RefVectorWithLeader<ParticleSetT<ComplexT>>& P_list,
-                                            int iat,
-                                            const RefVector<ValueVector>& psi_v_list,
-                                            const RefVector<GradVector>& dpsi_v_list,
-                                            const RefVector<ValueVector>& d2psi_v_list) const
+template<typename ST, typename VT>
+void SplineC2COMPTargetT<ST, VT>::mw_evaluateVGL(const RefVectorWithLeader<SPOSetT<VT>>& sa_list,
+                                                 const RefVectorWithLeader<ParticleSetT<VT>>& P_list,
+                                                 int iat,
+                                                 const RefVector<ValueVector>& psi_v_list,
+                                                 const RefVector<GradVector>& dpsi_v_list,
+                                                 const RefVector<ValueVector>& d2psi_v_list) const
 {
   assert(this == &sa_list.getLeader());
-  auto& phi_leader = sa_list.template getCastedLeader<SplineC2COMPTargetT<ST>>();
+  auto& phi_leader         = sa_list.template getCastedLeader<SplineC2COMPTargetT>();
   auto& mw_mem             = phi_leader.mw_mem_handle_.getResource();
   auto& mw_pos_copy        = mw_mem.mw_pos_copy;
   auto& mw_offload_scratch = mw_mem.mw_offload_scratch;
@@ -591,17 +595,17 @@ void SplineC2COMPTargetT<ST>::mw_evaluateVGL(const RefVectorWithLeader<SPOSet>& 
                                  d2psi_v_list);
 }
 
-template<typename ST>
-void SplineC2COMPTargetT<ST>::mw_evaluateVGLandDetRatioGrads(const RefVectorWithLeader<SPOSet>& spo_list,
-                                                            const RefVectorWithLeader<ParticleSetT<ComplexT>>& P_list,
-                                                            int iat,
-                                                            const std::vector<const ValueType*>& invRow_ptr_list,
-                                                            OffloadMWVGLArray& phi_vgl_v,
-                                                            std::vector<ValueType>& ratios,
-                                                            std::vector<GradType>& grads) const
+template<typename ST, typename VT>
+void SplineC2COMPTargetT<ST, VT>::mw_evaluateVGLandDetRatioGrads(const RefVectorWithLeader<SPOSetT<VT>>& spo_list,
+                                                                 const RefVectorWithLeader<ParticleSetT<VT>>& P_list,
+                                                                 int iat,
+                                                                 const std::vector<const ValueType*>& invRow_ptr_list,
+                                                                 OffloadMWVGLArray& phi_vgl_v,
+                                                                 std::vector<ValueType>& ratios,
+                                                                 std::vector<GradType>& grads) const
 {
   assert(this == &spo_list.getLeader());
-  auto& phi_leader         = spo_list.template getCastedLeader<SplineC2COMPTargetT<ST>>();
+  auto& phi_leader         = spo_list.template getCastedLeader<SplineC2COMPTargetT>();
   auto& mw_mem             = phi_leader.mw_mem_handle_.getResource();
   auto& buffer_H2D         = mw_mem.buffer_H2D;
   auto& rg_private         = mw_mem.rg_private;
@@ -719,7 +723,8 @@ void SplineC2COMPTargetT<ST>::mw_evaluateVGLandDetRatioGrads(const RefVectorWith
         ValueType* restrict out_d2phi  = out_dphi_z + phi_vgl_stride;
 
         ValueType ratio(0), grad_x(0), grad_y(0), grad_z(0);
-        PRAGMA_OFFLOAD("omp parallel for reduction(+: ratio, grad_x, grad_y, grad_z)")
+        PRAGMA_OFFLOAD("omp parallel for \
+                        reduction(+: ratio, grad_x, grad_y, grad_z)")
         for (size_t j = first_cplx; j < last_cplx; j++)
         {
           const size_t psiIndex = first_spo_local + j;
@@ -760,13 +765,14 @@ void SplineC2COMPTargetT<ST>::mw_evaluateVGLandDetRatioGrads(const RefVectorWith
     grads[iw] = GradType{grad_x / ratio, grad_y / ratio, grad_z / ratio};
   }
 }
-template<typename ST>
-void SplineC2COMPTargetT<ST>::assign_vgh(const PointType& r,
-                                        ValueVector& psi,
-                                        GradVector& dpsi,
-                                        HessVector& grad_grad_psi,
-                                        int first,
-                                        int last) const
+
+template<typename ST, typename VT>
+void SplineC2COMPTargetT<ST, VT>::assign_vgh(const PointType& r,
+                                             ValueVector& psi,
+                                             GradVector& dpsi,
+                                             HessVector& grad_grad_psi,
+                                             int first,
+                                             int last) const
 {
   // protect last
   last = last > this->kPoints.size() ? this->kPoints.size() : last;
@@ -802,11 +808,11 @@ void SplineC2COMPTargetT<ST>::assign_vgh(const PointType& r,
     const ST val_r = myV[jr];
     const ST val_i = myV[ji];
 
-    //phase
+    // phase
     ST s, c;
     omptarget::sincos(-(x * kX + y * kY + z * kZ), &s, &c);
 
-    //dot(PrimLattice.G,myG[j])
+    // dot(PrimLattice.G,myG[j])
     const ST dX_r = g00 * g0[jr] + g01 * g1[jr] + g02 * g2[jr];
     const ST dY_r = g10 * g0[jr] + g11 * g1[jr] + g12 * g2[jr];
     const ST dZ_r = g20 * g0[jr] + g21 * g1[jr] + g22 * g2[jr];
@@ -879,12 +885,12 @@ void SplineC2COMPTargetT<ST>::assign_vgh(const PointType& r,
   }
 }
 
-template<typename ST>
-void SplineC2COMPTargetT<ST>::evaluateVGH(const ParticleSetT<ComplexT>& P,
-                                         const int iat,
-                                         ValueVector& psi,
-                                         GradVector& dpsi,
-                                         HessVector& grad_grad_psi)
+template<typename ST, typename VT>
+void SplineC2COMPTargetT<ST, VT>::evaluateVGH(const ParticleSetT<VT>& P,
+                                              const int iat,
+                                              ValueVector& psi,
+                                              GradVector& dpsi,
+                                              HessVector& grad_grad_psi)
 {
   const PointType& r = P.activeR(iat);
   PointType ru(PrimLattice.toUnit_floor(r));
@@ -892,7 +898,8 @@ void SplineC2COMPTargetT<ST>::evaluateVGH(const ParticleSetT<ComplexT>& P,
 #pragma omp parallel
   {
     int first, last;
-    // Factor of 2 because psi is complex and the spline storage and evaluation uses a real type
+    // Factor of 2 because psi is complex and the spline storage and
+    // evaluation uses a real type
     FairDivideAligned(2 * psi.size(), getAlignment<ST>(), omp_get_num_threads(), omp_get_thread_num(), first, last);
 
     spline2::evaluate3d_vgh(SplineInst->getSplinePtr(), ru, myV, myG, myH, first, last);
@@ -900,14 +907,14 @@ void SplineC2COMPTargetT<ST>::evaluateVGH(const ParticleSetT<ComplexT>& P,
   }
 }
 
-template<typename ST>
-void SplineC2COMPTargetT<ST>::assign_vghgh(const PointType& r,
-                                          ValueVector& psi,
-                                          GradVector& dpsi,
-                                          HessVector& grad_grad_psi,
-                                          GGGVector& grad_grad_grad_psi,
-                                          int first,
-                                          int last) const
+template<typename ST, typename VT>
+void SplineC2COMPTargetT<ST, VT>::assign_vghgh(const PointType& r,
+                                               ValueVector& psi,
+                                               GradVector& dpsi,
+                                               HessVector& grad_grad_psi,
+                                               GGGVector& grad_grad_grad_psi,
+                                               int first,
+                                               int last) const
 {
   // protect last
   last = last < 0 ? this->kPoints.size() : (last > this->kPoints.size() ? this->kPoints.size() : last);
@@ -942,7 +949,7 @@ void SplineC2COMPTargetT<ST>::assign_vghgh(const PointType& r,
   const ST* restrict gh122 = mygH.data(8);
   const ST* restrict gh222 = mygH.data(9);
 
-//SIMD doesn't work quite right yet.  Comment out until further debugging.
+// SIMD doesn't work quite right yet.  Comment out until further debugging.
 #pragma omp simd
   for (size_t j = first; j < last; ++j)
   {
@@ -955,11 +962,11 @@ void SplineC2COMPTargetT<ST>::assign_vghgh(const PointType& r,
     const ST val_r = myV[jr];
     const ST val_i = myV[ji];
 
-    //phase
+    // phase
     ST s, c;
     omptarget::sincos(-(x * kX + y * kY + z * kZ), &s, &c);
 
-    //dot(PrimLattice.G,myG[j])
+    // dot(PrimLattice.G,myG[j])
     const ST dX_r = g00 * g0[jr] + g01 * g1[jr] + g02 * g2[jr];
     const ST dY_r = g10 * g0[jr] + g11 * g1[jr] + g12 * g2[jr];
     const ST dZ_r = g20 * g0[jr] + g21 * g1[jr] + g22 * g2[jr];
@@ -982,7 +989,8 @@ void SplineC2COMPTargetT<ST>::assign_vghgh(const PointType& r,
     dpsi[psiIndex][1]     = ComplexT(c * gY_r - s * gY_i, c * gY_i + s * gY_r);
     dpsi[psiIndex][2]     = ComplexT(c * gZ_r - s * gZ_i, c * gZ_i + s * gZ_r);
 
-    //intermediates for computation of hessian. \partial_i \partial_j phi in cartesian coordinates.
+    // intermediates for computation of hessian. \partial_i \partial_j phi
+    // in cartesian coordinates.
     const ST f_xx_r = v_m_v(h00[jr], h01[jr], h02[jr], h11[jr], h12[jr], h22[jr], g00, g01, g02, g00, g01, g02);
     const ST f_xy_r = v_m_v(h00[jr], h01[jr], h02[jr], h11[jr], h12[jr], h22[jr], g00, g01, g02, g10, g11, g12);
     const ST f_xz_r = v_m_v(h00[jr], h01[jr], h02[jr], h11[jr], h12[jr], h22[jr], g00, g01, g02, g20, g21, g22);
@@ -1021,8 +1029,10 @@ void SplineC2COMPTargetT<ST>::assign_vghgh(const PointType& r,
     grad_grad_psi[psiIndex][7] = ComplexT(c * h_yz_r - s * h_yz_i, c * h_yz_i + s * h_yz_r);
     grad_grad_psi[psiIndex][8] = ComplexT(c * h_zz_r - s * h_zz_i, c * h_zz_i + s * h_zz_r);
 
-    //These are the real and imaginary components of the third SPO derivative.  _xxx denotes
-    // third derivative w.r.t. x, _xyz, a derivative with resepect to x,y, and z, and so on.
+    // These are the real and imaginary components of the third SPO
+    // derivative.  _xxx denotes
+    //  third derivative w.r.t. x, _xyz, a derivative with resepect to x,y,
+    //  and z, and so on.
 
     const ST f3_xxx_r = t3_contract(gh000[jr], gh001[jr], gh002[jr], gh011[jr], gh012[jr], gh022[jr], gh111[jr],
                                     gh112[jr], gh122[jr], gh222[jr], g00, g01, g02, g00, g01, g02, g00, g01, g02);
@@ -1066,7 +1076,8 @@ void SplineC2COMPTargetT<ST>::assign_vghgh(const PointType& r,
     const ST f3_zzz_i = t3_contract(gh000[ji], gh001[ji], gh002[ji], gh011[ji], gh012[ji], gh022[ji], gh111[ji],
                                     gh112[ji], gh122[ji], gh222[ji], g20, g21, g22, g20, g21, g22, g20, g21, g22);
 
-    //Here is where we build up the components of the physical hessian gradient, namely, d^3/dx^3(e^{-ik*r}\phi(r)
+    // Here is where we build up the components of the physical hessian
+    // gradient, namely, d^3/dx^3(e^{-ik*r}\phi(r)
     const ST gh_xxx_r = f3_xxx_r + 3 * kX * f_xx_i - 3 * kX * kX * dX_r - kX * kX * kX * val_i;
     const ST gh_xxx_i = f3_xxx_i - 3 * kX * f_xx_r - 3 * kX * kX * dX_i + kX * kX * kX * val_r;
     const ST gh_xxy_r =
@@ -1122,7 +1133,6 @@ void SplineC2COMPTargetT<ST>::assign_vghgh(const PointType& r,
     grad_grad_grad_psi[psiIndex][1][7] = ComplexT(c * gh_yyz_r - s * gh_yyz_i, c * gh_yyz_i + s * gh_yyz_r);
     grad_grad_grad_psi[psiIndex][1][8] = ComplexT(c * gh_yzz_r - s * gh_yzz_i, c * gh_yzz_i + s * gh_yzz_r);
 
-
     grad_grad_grad_psi[psiIndex][2][0] = ComplexT(c * gh_xxz_r - s * gh_xxz_i, c * gh_xxz_i + s * gh_xxz_r);
     grad_grad_grad_psi[psiIndex][2][1] = ComplexT(c * gh_xyz_r - s * gh_xyz_i, c * gh_xyz_i + s * gh_xyz_r);
     grad_grad_grad_psi[psiIndex][2][2] = ComplexT(c * gh_xzz_r - s * gh_xzz_i, c * gh_xzz_i + s * gh_xzz_r);
@@ -1135,13 +1145,13 @@ void SplineC2COMPTargetT<ST>::assign_vghgh(const PointType& r,
   }
 }
 
-template<typename ST>
-void SplineC2COMPTargetT<ST>::evaluateVGHGH(const ParticleSetT<ComplexT>& P,
-                                           const int iat,
-                                           ValueVector& psi,
-                                           GradVector& dpsi,
-                                           HessVector& grad_grad_psi,
-                                           GGGVector& grad_grad_grad_psi)
+template<typename ST, typename VT>
+void SplineC2COMPTargetT<ST, VT>::evaluateVGHGH(const ParticleSetT<VT>& P,
+                                                const int iat,
+                                                ValueVector& psi,
+                                                GradVector& dpsi,
+                                                HessVector& grad_grad_psi,
+                                                GGGVector& grad_grad_grad_psi)
 {
   const PointType& r = P.activeR(iat);
   PointType ru(PrimLattice.toUnit_floor(r));
@@ -1155,13 +1165,13 @@ void SplineC2COMPTargetT<ST>::evaluateVGHGH(const ParticleSetT<ComplexT>& P,
   }
 }
 
-template<typename ST>
-void SplineC2COMPTargetT<ST>::evaluate_notranspose(const ParticleSetT<ComplexT>& P,
-                                                  int first,
-                                                  int last,
-                                                  ValueMatrix& logdet,
-                                                  GradMatrix& dlogdet,
-                                                  ValueMatrix& d2logdet)
+template<typename ST, typename VT>
+void SplineC2COMPTargetT<ST, VT>::evaluate_notranspose(const ParticleSetT<VT>& P,
+                                                       int first,
+                                                       int last,
+                                                       ValueMatrix& logdet,
+                                                       GradMatrix& dlogdet,
+                                                       ValueMatrix& d2logdet)
 {
   // chunk the [first, last) loop into blocks to save temporary memory usage
   const int block_size = 16;
@@ -1217,7 +1227,9 @@ void SplineC2COMPTargetT<ST>::evaluate_notranspose(const ParticleSetT<ComplexT>&
   }
 }
 
-template class SplineC2COMPTargetT<float>;
-template class SplineC2COMPTargetT<double>;
+template class SplineC2COMPTargetT<float, std::complex<float>>;
+template class SplineC2COMPTargetT<float, std::complex<double>>;
+template class SplineC2COMPTargetT<double, std::complex<float>>;
+template class SplineC2COMPTargetT<double, std::complex<double>>;
 
 } // namespace qmcplusplus

@@ -23,33 +23,24 @@ add_subdirectory(detail)
 
 set(WFBASE_SRCS
     OptimizableFunctorBase.cpp
-    VariableSet.cpp
+    NaNguard.cpp
+    VariableSetT.cpp
     WaveFunctionPool.cpp
     WaveFunctionComponent.cpp
     WaveFunctionComponentBuilder.cpp
-    SPOSetBuilder.cpp
     SPOSetBuilderT.cpp
     SPOInfo.cpp
     SPOSetInfo.cpp
     SPOSetInputInfo.cpp
-    SPOSet.cpp
     SPOSetT.cpp
-    CompositeSPOSet.cpp
     CompositeSPOSetT.cpp
-    HarmonicOscillator/SHOSet.cpp
     HarmonicOscillator/SHOSetT.cpp
-    HarmonicOscillator/SHOSetBuilder.cpp
     HarmonicOscillator/SHOSetBuilderT.cpp
     ExampleHeBuilder.cpp
-    ExampleHeComponent.cpp)
+    ExampleHeComponent.cpp
+    RotatedSPOsT.cpp
+    SpinorSetT.cpp)
 
-if(NOT QMC_COMPLEX)
-  set(WFBASE_SRCS ${WFBASE_SRCS} RotatedSPOs.cpp RotatedSPOsT.cpp)
-endif(NOT QMC_COMPLEX)
-
-if(QMC_COMPLEX)
-  set(WFBASE_SRCS ${WFBASE_SRCS} SpinorSet.cpp SpinorSetT.cpp)
-endif(QMC_COMPLEX)
 ########################
 # build jastrows
 ########################
@@ -67,53 +58,77 @@ set(JASTROW_SRCS
 set(JASTROW_OMPTARGET_SRCS
     Jastrow/TwoBodyJastrow.cpp
     Jastrow/BsplineFunctor.cpp)
-set(FERMION_SRCS ${FERMION_SRCS} ElectronGas/FreeOrbital.cpp ElectronGas/FreeOrbitalT.cpp ElectronGas/FreeOrbitalBuilder.cpp)
+set(FERMION_SRCS ${FERMION_SRCS}
+    ElectronGas/FreeOrbitalT.cpp
+    ElectronGas/FreeOrbitalBuilderT.cpp)
 
 # wavefunctions only availbale to 3-dim problems
 if(OHMMS_DIM MATCHES 3)
 
   set(JASTROW_SRCS ${JASTROW_SRCS} Jastrow/eeI_JastrowBuilder.cpp Jastrow/CountingJastrowBuilder.cpp)
 
-  set(FERMION_SRCS ${FERMION_SRCS} LCAO/LCAOrbitalSet.cpp LCAO/LCAOrbitalSetT.cpp LCAO/LCAOrbitalBuilder.cpp LCAO/MultiQuinticSpline1D.cpp
-                   LCAO/AOBasisBuilder.cpp LCAO/SoaLocalizedBasisSet.cpp)
-  if(QMC_COMPLEX)
-    set(FERMION_SRCS ${FERMION_SRCS} LCAO/LCAOSpinorBuilder.cpp)
-  else(QMC_COMPLEX)
+  set(FERMION_SRCS ${FERMION_SRCS}
+      LCAO/LCAOrbitalSetT.cpp
+      LCAO/LCAOrbitalBuilderT.cpp
+      LCAO/MultiQuinticSpline1D.cpp
+      LCAO/AOBasisBuilderT.cpp
+      LCAO/SoaLocalizedBasisSet.cpp
+      LCAO/LCAOSpinorBuilderT.cpp
+      LCAO/SoaCuspCorrectionT.cpp)
+  if(NOT QMC_COMPLEX)
     #LCAO cusp correction is not ready for complex
-    set(FERMION_SRCS ${FERMION_SRCS} LCAO/LCAOrbitalSetWithCorrection.cpp LCAO/LCAOrbitalSetWithCorrectionT.cpp
-	    LCAO/CuspCorrectionConstruction.cpp LCAO/SoaCuspCorrection.cpp LCAO/SoaCuspCorrectionT.cpp)
-  endif(QMC_COMPLEX)
+    set(FERMION_SRCS ${FERMION_SRCS}
+        LCAO/LCAOrbitalSetWithCorrectionT.cpp
+        LCAO/CuspCorrectionConstructionT.cpp)
+  endif()
 
   if(HAVE_EINSPLINE)
     set(FERMION_SRCS
         ${FERMION_SRCS}
-        BsplineFactory/EinsplineSetBuilderCommon.cpp
-        BsplineFactory/EinsplineSetBuilderESHDF.fft.cpp
-        BsplineFactory/EinsplineSetBuilder_createSPOs.cpp
+        EinsplineSetBuilderT.cpp
+        BsplineFactory/createBsplineReaderT.cpp
         BsplineFactory/createComplexDouble.cpp
         BsplineFactory/createComplexSingle.cpp
-        BsplineFactory/HybridRepCenterOrbitals.cpp
+        BsplineFactory/HybridRepCenterOrbitalsT.cpp
         BandInfo.cpp
-        BsplineFactory/BsplineReaderBase.cpp)
-    set(FERMION_OMPTARGET_SRCS Fermion/DiracDeterminantBatched.cpp Fermion/MultiDiracDeterminant.2.cpp)
+        BsplineFactory/SplineC2RT.cpp
+        BsplineFactory/SplineR2RT.cpp
+        BsplineFactory/SplineC2CT.cpp
+        BsplineFactory/BsplineReaderBaseT.cpp)
+    set(FERMION_OMPTARGET_SRCS
+        Fermion/DiracDeterminantBatched.cpp
+        Fermion/MultiDiracDeterminant.2.cpp
+        BsplineFactory/SplineC2ROMPTargetT.cpp
+        BsplineFactory/SplineC2COMPTargetT.cpp
+    )
     if(QMC_COMPLEX)
-      set(FERMION_SRCS ${FERMION_SRCS} BsplineFactory/EinsplineSpinorSetBuilder.cpp BsplineFactory/SplineC2C.cpp BsplineFactory/SplineC2CT.cpp)
-      set(FERMION_OMPTARGET_SRCS ${FERMION_OMPTARGET_SRCS} BsplineFactory/SplineC2COMPTarget.cpp)
+      set(FERMION_SRCS ${FERMION_SRCS}
+        EinsplineSpinorSetBuilderT.cpp) 
+      set(FERMION_OMPTARGET_SRCS ${FERMION_OMPTARGET_SRCS}
+        EinsplineSpinorSetBuilderT.cpp)
+      set(FERMION_OMPTARGET_SRCS ${FERMION_OMPTARGET_SRCS})
     else(QMC_COMPLEX)
-      set(FERMION_SRCS ${FERMION_SRCS} BsplineFactory/createRealSingle.cpp BsplineFactory/createRealDouble.cpp
-        BsplineFactory/SplineC2R.cpp BsplineFactory/SplineR2R.cpp)
-      set(FERMION_OMPTARGET_SRCS ${FERMION_OMPTARGET_SRCS} BsplineFactory/SplineC2ROMPTarget.cpp)
+      set(FERMION_SRCS ${FERMION_SRCS}
+        BsplineFactory/createRealSingle.cpp
+        BsplineFactory/createRealDouble.cpp)
+      set(FERMION_OMPTARGET_SRCS ${FERMION_OMPTARGET_SRCS})
     endif(QMC_COMPLEX)
 
   endif(HAVE_EINSPLINE)
 
   # plane wave SPO
-  set(FERMION_SRCS ${FERMION_SRCS} PlaneWave/PWBasis.cpp PlaneWave/PWBasisT.cpp
-      PlaneWave/PWParameterSet.cpp PlaneWave/PWOrbitalSetBuilder.cpp)
+  set(FERMION_SRCS ${FERMION_SRCS}
+    PlaneWave/PWBasis.cpp
+    PlaneWave/PWBasisT.cpp
+    PlaneWave/PWOrbitalSetT.cpp
+    PlaneWave/PWRealOrbitalSetT.cpp
+    PlaneWave/PWParameterSet.cpp
+    PlaneWave/PWOrbitalSetBuilder.cpp
+    )
   if(QMC_COMPLEX)
-    set(FERMION_SRCS ${FERMION_SRCS} PlaneWave/PWOrbitalSet.cpp PlaneWave/PWOrbitalSetT.cpp)
+    set(FERMION_SRCS ${FERMION_SRCS} PlaneWave/PWOrbitalSet.cpp)
   else()
-    set(FERMION_SRCS ${FERMION_SRCS} PlaneWave/PWRealOrbitalSet.cpp PlaneWave/PWRealOrbitalSetT.cpp)
+    set(FERMION_SRCS ${FERMION_SRCS} PlaneWave/PWRealOrbitalSet.cpp)
   endif(QMC_COMPLEX)
 
   if(NOT QMC_COMPLEX)
@@ -132,7 +147,7 @@ set(FERMION_SRCS
     Fermion/BackflowTransformation.cpp
     Fermion/DiracDeterminantWithBackflow.cpp
     Fermion/SlaterDetWithBackflow.cpp
-    SPOSetBuilderFactory.cpp
+    SPOSetBuilderFactoryT.cpp
     TrialWaveFunction.cpp
     TWFdispatcher.cpp
     TWFFastDerivWrapper.cpp
@@ -153,11 +168,7 @@ target_include_directories(qmcwfs PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 target_link_libraries(qmcwfs PUBLIC qmcutil qmcparticle platform_runtime platform_LA)
 target_link_libraries(qmcwfs PRIVATE einspline Math::FFTW3)
 
-if(USE_OBJECT_TARGET)
-  add_library(qmcwfs_omptarget OBJECT ${JASTROW_OMPTARGET_SRCS} ${FERMION_OMPTARGET_SRCS})
-else(USE_OBJECT_TARGET)
-  add_library(qmcwfs_omptarget ${JASTROW_OMPTARGET_SRCS} ${FERMION_OMPTARGET_SRCS})
-endif(USE_OBJECT_TARGET)
+add_library(qmcwfs_omptarget OBJECT ${JASTROW_OMPTARGET_SRCS} ${FERMION_OMPTARGET_SRCS})
 
 target_include_directories(qmcwfs_omptarget PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 target_link_libraries(qmcwfs_omptarget PUBLIC qmcutil qmcparticle containers platform_LA)

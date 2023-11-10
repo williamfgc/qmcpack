@@ -13,33 +13,36 @@
 // File created by: Jeongnim Kim, jeongnim.kim@gmail.com, University of Illinois at Urbana-Champaign
 //////////////////////////////////////////////////////////////////////////////////////
 
-
 /** @file
  *
- * class to handle complex splines to real orbitals with splines of arbitrary precision
+ * class to handle complex splines to real orbitals with splines of arbitrary
+ * precision
  */
 #ifndef QMCPLUSPLUS_SPLINE_C2RT_H
 #define QMCPLUSPLUS_SPLINE_C2RT_H
 
-#include <memory>
-#include "QMCWaveFunctions/BsplineFactory/BsplineSetT.h"
 #include "OhmmsSoA/VectorSoaContainer.h"
-#include "spline2/MultiBspline.hpp"
+#include "QMCWaveFunctions/BsplineFactory/BsplineSetT.h"
 #include "Utilities/FairDivide.h"
+#include "spline2/MultiBspline.hpp"
+
+#include <memory>
 
 namespace qmcplusplus
 {
-/** class to match std::complex<ST> spline with BsplineSet::ValueType (real) SPOs
+/** class to match std::complex<ST> spline with BsplineSet::ValueType (real)
+ * SPOs
  * @tparam ST precision of spline
  *
  * Requires temporage storage and multiplication of phase vectors
- * The internal storage of complex spline coefficients uses double sized real arrays of ST type, aligned and padded.
- * The first nComplexBands complex splines produce 2 real orbitals.
- * The rest complex splines produce 1 real orbital.
- * All the output orbitals are real (C2R). The maximal number of output orbitals is OrbitalSetSize.
+ * The internal storage of complex spline coefficients uses double sized real
+ * arrays of ST type, aligned and padded. The first nComplexBands complex
+ * splines produce 2 real orbitals. The rest complex splines produce 1 real
+ * orbital. All the output orbitals are real (C2R). The maximal number of output
+ * orbitals is OrbitalSetSize.
  */
-template<typename ST>
-class SplineC2RT : public BsplineSetT<ST>
+template<typename ST, typename VT>
+class SplineC2RT : public BsplineSetT<VT>
 {
 public:
   using SplineType       = typename bspline_traits<ST, 3>::SplineType;
@@ -48,32 +51,33 @@ public:
   using PointType        = TinyVector<ST, 3>;
   using SingleSplineType = UBspline_3d_d;
   // types for evaluation results
-  using TT          = typename BsplineSetT<ST>::ValueType;
-  using ValueVector = typename BsplineSetT<ST>::ValueVector;
-  using GGGVector   = typename BsplineSetT<ST>::GGGVector;
-  using GradVector  = typename BsplineSetT<ST>::GradVector;
-  using HessVector  = typename BsplineSetT<ST>::HessVector;
+  using TT = typename BsplineSetT<VT>::ValueType;
+  using typename BsplineSetT<VT>::GGGVector;
+  using typename BsplineSetT<VT>::GradVector;
+  using typename BsplineSetT<VT>::HessVector;
+  using typename BsplineSetT<VT>::ValueVector;
 
-  using vContainer_type = Vector<ST, aligned_allocator<ST>>;
-  using gContainer_type = VectorSoaContainer<ST, 3>;
-  using hContainer_type = VectorSoaContainer<ST, 6>;
-
+  using vContainer_type  = Vector<ST, aligned_allocator<ST>>;
+  using gContainer_type  = VectorSoaContainer<ST, 3>;
+  using hContainer_type  = VectorSoaContainer<ST, 6>;
   using ghContainer_type = VectorSoaContainer<ST, 10>;
 
 private:
-  ///primitive cell
+  /// primitive cell
   CrystalLattice<ST, 3> PrimLattice;
-  ///\f$GGt=G^t G \f$, transformation for tensor in LatticeUnit to CartesianUnit, e.g. Hessian
+  ///\f$GGt=G^t G \f$, transformation for tensor in LatticeUnit to
+  ///CartesianUnit, e.g. Hessian
   Tensor<ST, 3> GGt;
-  ///number of complex bands
+  /// number of complex bands
   int nComplexBands;
-  ///multi bspline set
+  /// multi bspline set
   std::shared_ptr<MultiBspline<ST>> SplineInst;
 
   vContainer_type mKK;
   VectorSoaContainer<ST, 3> myKcart;
 
-  ///thread private ratios for reduction when using nested threading, numVP x numThread
+  /// thread private ratios for reduction when using nested threading, numVP x
+  /// numThread
   Matrix<TT> ratios_private;
 
 protected:
@@ -85,14 +89,14 @@ protected:
   ghContainer_type mygH;
 
 public:
-  SplineC2RT(const std::string& my_name) : BsplineSetT<ST>(my_name), nComplexBands(0) {}
+  SplineC2RT(const std::string& my_name) : BsplineSetT<VT>(my_name), nComplexBands(0) {}
 
   SplineC2RT(const SplineC2RT& in);
   virtual std::string getClassName() const override { return "SplineC2R"; }
   virtual std::string getKeyword() const override { return "SplineC2R"; }
   bool isComplex() const override { return true; };
 
-  std::unique_ptr<SPOSetT<ST>> makeClone() const override { return std::make_unique<SplineC2RT<ST>>(*this); }
+  std::unique_ptr<SPOSetT<VT>> makeClone() const override { return std::make_unique<SplineC2RT>(*this); }
 
   inline void resizeStorage(size_t n, size_t nvals)
   {
@@ -156,23 +160,24 @@ public:
 
   void assign_v(const PointType& r, const vContainer_type& myV, ValueVector& psi, int first, int last) const;
 
-  void evaluateValue(const ParticleSetT<ST>& P, const int iat, ValueVector& psi) override;
+  void evaluateValue(const ParticleSetT<VT>& P, const int iat, ValueVector& psi) override;
 
-  void evaluateDetRatios(const VirtualParticleSetT<ST>& VP,
+  void evaluateDetRatios(const VirtualParticleSetT<VT>& VP,
                          ValueVector& psi,
                          const ValueVector& psiinv,
                          std::vector<TT>& ratios) override;
 
   /** assign_vgl
-   */
+     */
   void assign_vgl(const PointType& r, ValueVector& psi, GradVector& dpsi, ValueVector& d2psi, int first, int last)
       const;
 
-  /** assign_vgl_from_l can be used when myL is precomputed and myV,myG,myL in cartesian
-   */
+  /** assign_vgl_from_l can be used when myL is precomputed and myV,myG,myL in
+     * cartesian
+     */
   void assign_vgl_from_l(const PointType& r, ValueVector& psi, GradVector& dpsi, ValueVector& d2psi);
 
-  void evaluateVGL(const ParticleSetT<ST>& P,
+  void evaluateVGL(const ParticleSetT<VT>& P,
                    const int iat,
                    ValueVector& psi,
                    GradVector& dpsi,
@@ -185,7 +190,7 @@ public:
                   int first,
                   int last) const;
 
-  void evaluateVGH(const ParticleSetT<ST>& P,
+  void evaluateVGH(const ParticleSetT<VT>& P,
                    const int iat,
                    ValueVector& psi,
                    GradVector& dpsi,
@@ -199,7 +204,7 @@ public:
                     int first = 0,
                     int last  = -1) const;
 
-  void evaluateVGHGH(const ParticleSetT<ST>& P,
+  void evaluateVGHGH(const ParticleSetT<VT>& P,
                      const int iat,
                      ValueVector& psi,
                      GradVector& dpsi,
@@ -207,8 +212,9 @@ public:
                      GGGVector& grad_grad_grad_psi) override;
 
   template<class BSPLINESPO>
-  friend struct SplineSetReader;
-  friend struct BsplineReaderBase;
+  friend class SplineSetReaderT;
+  template<typename>
+  friend class BsplineReaderBaseT;
 };
 
 } // namespace qmcplusplus

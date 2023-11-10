@@ -18,6 +18,7 @@
 #include "QMCDrivers/WFOpt/QMCCostFunctionBase.h"
 #include "QMCDrivers/CloneManager.h"
 #include "QMCWaveFunctions/OrbitalSetTraits.h"
+#include "SampleStack.h"
 
 namespace qmcplusplus
 {
@@ -71,7 +72,7 @@ protected:
 
   /** Temp derivative properties and Hderivative properties of all the walkers
   */
-  Matrix<Return_rt> DerivRecords_;
+  Matrix<Return_t> DerivRecords_;
   Matrix<Return_rt> HDerivRecords_;
 
   EffectiveWeight correlatedSampling(bool needGrad = true) override;

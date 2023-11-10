@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////////////
-// This file is distributed under the University of Illinois/NCSA Open Source
-// License. See LICENSE file in top directory for details.
+// This file is distributed under the University of Illinois/NCSA Open Source License.
+// See LICENSE file in top directory for details.
 //
 // Copyright (c) 2022 QMCPACK developers.
 //
@@ -20,38 +20,28 @@
  */
 namespace qmcplusplus
 {
-template <typename T>
-using OptVariablesType = optimize::VariableSetT<T>;
+template<typename T>
+using OptVariablesTypeT = optimize::VariableSetT<T>;
 
-template <typename T>
+template<typename T>
 class OptimizableObjectT
 {
 public:
-    OptimizableObjectT(const std::string& name) : name_(name)
-    {
-    }
+  OptimizableObjectT(const std::string& name) : name_(name) {}
 
-    const std::string&
-    getName() const
-    {
-        return name_;
-    }
-    bool
-    isOptimized() const
-    {
-        return is_optimized_;
-    }
+  const std::string& getName() const { return name_; }
+  bool isOptimized() const { return is_optimized_; }
 
 private:
-    /** Name of the optimizable object
+  /** Name of the optimizable object
      */
-    const std::string name_;
-    /** If true, this object is actively modified during WFOpt
+  const std::string name_;
+  /** If true, this object is actively modified during WFOpt
      */
-    bool is_optimized_ = false;
+  bool is_optimized_ = false;
 
 public:
-    /** check in variational parameters to the global list of parameters used by
+  /** check in variational parameters to the global list of parameters used by
      * the optimizer.
      * @param active a super set of optimizable variables
      *
@@ -76,28 +66,19 @@ public:
      * called through this vector and thus checkInVariablesExclusive
      * implementation should only handle non-OptimizableObject members.
      */
-    virtual void
-    checkInVariablesExclusive(OptVariablesType<T>& active) = 0;
+  virtual void checkInVariablesExclusive(OptVariablesTypeT<T>& active) = 0;
 
-    /** reset the parameters during optimizations. Exclusive, see
+  /** reset the parameters during optimizations. Exclusive, see
      * checkInVariablesExclusive
      */
-    virtual void
-    resetParametersExclusive(const OptVariablesType<T>& active) = 0;
+  virtual void resetParametersExclusive(const OptVariablesTypeT<T>& active) = 0;
 
-    /** print the state, e.g., optimizables */
-    virtual void
-    reportStatus(std::ostream& os)
-    {
-    }
+  /** print the state, e.g., optimizables */
+  virtual void reportStatus(std::ostream& os) {}
 
-    void
-    setOptimization(bool state)
-    {
-        is_optimized_ = state;
-    }
+  void setOptimization(bool state) { is_optimized_ = state; }
 
-    /** Write the variational parameters for this object to the VP HDF file
+  /** Write the variational parameters for this object to the VP HDF file
      *
      * The hout parameter should come from VariableSet::writeToHDF
      *
@@ -108,43 +89,34 @@ public:
      * objects do not need to implement this function (yet).
      *
      */
-    virtual void
-    writeVariationalParameters(hdf_archive& hout){};
+  virtual void writeVariationalParameters(hdf_archive& hout){};
 
-    /** Read the variational parameters for this object from the VP HDF file
+  /** Read the variational parameters for this object from the VP HDF file
      *
      * The hin parameter should come from VariableSet::readFromHDF
      *
      * By default the parameters are read in VariableSet::readFromHDF, and
      * objects do not need to implement this function (yet).
      */
-    virtual void
-    readVariationalParameters(hdf_archive& hin){};
+  virtual void readVariationalParameters(hdf_archive& hin){};
 };
 
-template <typename T>
+template<typename T>
 class UniqueOptObjRefsT : public RefVector<OptimizableObjectT<T>>
 {
 public:
-    OptimizableObjectT<T>&
-    operator[](size_t i) const
-    {
-        return RefVector<OptimizableObjectT<T>>::operator[](i);
-    }
+  OptimizableObjectT<T>& operator[](size_t i) const { return RefVector<OptimizableObjectT<T>>::operator[](i); }
 
-    void
-    push_back(OptimizableObjectT<T>& obj)
-    {
-        if (obj.getName().empty())
-            throw std::logic_error("BUG!! Only named OptimizableObject object "
-                                   "can be added to UniqueOptObjRefs!");
-        auto result = std::find_if(
-            this->begin(), this->end(), [&](OptimizableObjectT<T>& element) {
-                return element.getName() == obj.getName();
-            });
-        if (result == this->end())
-            RefVector<OptimizableObjectT<T>>::push_back(obj);
-    }
+  void push_back(OptimizableObjectT<T>& obj)
+  {
+    if (obj.getName().empty())
+      throw std::logic_error("BUG!! Only named OptimizableObject object "
+                             "can be added to UniqueOptObjRefs!");
+    auto result = std::find_if(this->begin(), this->end(),
+                               [&](OptimizableObjectT<T>& element) { return element.getName() == obj.getName(); });
+    if (result == this->end())
+      RefVector<OptimizableObjectT<T>>::push_back(obj);
+  }
 };
 
 } // namespace qmcplusplus

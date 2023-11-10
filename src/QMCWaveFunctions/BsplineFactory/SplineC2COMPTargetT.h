@@ -1,4 +1,4 @@
-  //////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////
 // This file is distributed under the University of Illinois/NCSA Open Source License.
 // See LICENSE file in top directory for details.
 //
@@ -9,36 +9,39 @@
 // File created by: Ye Luo, yeluo@anl.gov, Argonne National Laboratory
 //////////////////////////////////////////////////////////////////////////////////////
 
-
-/** @file SplineC2COMPTargetT.h
+/** @file SplineC2COMPTarget.h
  *
- * class to handle complex splines to complex orbitals with splines of arbitrary precision
- * splines storage and computation is offloaded to accelerators using OpenMP target
+ * class to handle complex splines to complex orbitals with splines of arbitrary
+ * precision splines storage and computation is offloaded to accelerators using
+ * OpenMP target
  */
-#ifndef QMCPLUSPLUS_SPLINE_C2C_OMPTARGET_H
-#define QMCPLUSPLUS_SPLINE_C2C_OMPTARGET_H
+#ifndef QMCPLUSPLUS_SPLINE_C2C_OMPTARGETT_H
+#define QMCPLUSPLUS_SPLINE_C2C_OMPTARGETT_H
 
-#include <memory>
-#include "QMCWaveFunctions/BsplineFactory/BsplineSetT.h"
-#include "OhmmsSoA/VectorSoaContainer.h"
-#include "spline2/MultiBspline.hpp"
 #include "OMPTarget/OffloadAlignedAllocators.hpp"
+#include "OhmmsSoA/VectorSoaContainer.h"
+#include "QMCWaveFunctions/BsplineFactory/BsplineSetT.h"
+#include "QMCWaveFunctions/BsplineFactory/contraction_helper.hpp"
+#include "SplineOMPTargetMultiWalkerMem.h"
 #include "Utilities/FairDivide.h"
 #include "Utilities/TimerManager.h"
+#include "spline2/MultiBspline.hpp"
 #include <ResourceHandle.h>
-#include "SplineOMPTargetMultiWalkerMem.h"
+
+#include <memory>
 
 namespace qmcplusplus
 {
-/** class to match std::complex<ST> spline with BsplineSetT<ComplexT>::ValueType (complex) SPOs with OpenMP offload
+/** class to match std::complex<ST> spline with BsplineSet::ValueType (complex)
+ * SPOs with OpenMP offload
  * @tparam ST precision of spline
  *
  * Requires temporage storage and multiplication of phase vectors
- * The internal storage of complex spline coefficients uses double sized real arrays of ST type, aligned and padded.
- * All the output orbitals are complex.
+ * The internal storage of complex spline coefficients uses double sized real
+ * arrays of ST type, aligned and padded. All the output orbitals are complex.
  */
-template<typename ST>
-class SplineC2COMPTargetT : public BsplineSetT<std::complex<ST>>
+template<typename ST, typename VT>
+class SplineC2COMPTargetT : public BsplineSetT<VT>
 {
 public:
   using SplineType       = typename bspline_traits<ST, 3>::SplineType;
@@ -47,26 +50,22 @@ public:
   using PointType        = TinyVector<ST, 3>;
   using SingleSplineType = UBspline_3d_d;
   // types for evaluation results
-  using ComplexT = std::complex<ST>;
-  using GGGVector = typename BsplineSetT<ComplexT>::GGGVector;
-  using GradType = typename BsplineSetT<ComplexT>::GradType;
-  using GradVector = typename BsplineSetT<ComplexT>::GradVector;
-  using GradMatrix = typename BsplineSetT<ComplexT>::GradMatrix;
-  using HessVector = typename BsplineSetT<ComplexT>::HessVector;
-  using ValueVector = typename BsplineSetT<ComplexT>::ValueVector;
-  using ValueMatrix = typename BsplineSetT<ComplexT>::ValueMatrix;
-  using OffloadMWVGLArray = Array<ComplexT, 3, OffloadPinnedAllocator<ComplexT>>; 
+  using ComplexT = typename BsplineSetT<VT>::ValueType;
+  using typename BsplineSetT<VT>::ValueType;
+  using typename BsplineSetT<VT>::RealType;
+  using typename BsplineSetT<VT>::GradType;
+  using typename BsplineSetT<VT>::GGGVector;
+  using typename BsplineSetT<VT>::GradVector;
+  using typename BsplineSetT<VT>::GradMatrix;
+  using typename BsplineSetT<VT>::HessVector;
+  using typename BsplineSetT<VT>::ValueVector;
+  using typename BsplineSetT<VT>::ValueMatrix;
+  using typename BsplineSetT<VT>::OffloadMWVGLArray;
 
   using vContainer_type  = Vector<ST, aligned_allocator<ST>>;
   using gContainer_type  = VectorSoaContainer<ST, 3>;
   using hContainer_type  = VectorSoaContainer<ST, 6>;
   using ghContainer_type = VectorSoaContainer<ST, 10>;
-
-  using RealType  = typename SPOSetT<ComplexT>::RealType;
-  using ValueType = typename SPOSetT<ComplexT>::ValueType;
-
-  using SPOSet = SPOSetT<ComplexT>;
-  using SplineC2COMPTarget = SplineC2COMPTargetT<ST>;
 
   template<typename DT>
   using OffloadVector = Vector<DT, OffloadAllocator<DT>>;
@@ -76,11 +75,12 @@ public:
 private:
   /// timer for offload portion
   NewTimer& offload_timer_;
-  ///primitive cell
+  /// primitive cell
   CrystalLattice<ST, 3> PrimLattice;
-  ///\f$GGt=G^t G \f$, transformation for tensor in LatticeUnit to CartesianUnit, e.g. Hessian
+  ///\f$GGt=G^t G \f$, transformation for tensor in LatticeUnit to
+  /// CartesianUnit, e.g. Hessian
   Tensor<ST, 3> GGt;
-  ///multi bspline set
+  /// multi bspline set
   std::shared_ptr<MultiBspline<ST, OffloadAllocator<ST>, OffloadAllocator<SplineType>>> SplineInst;
 
   std::shared_ptr<OffloadVector<ST>> mKK;
@@ -90,15 +90,17 @@ private:
 
   ResourceHandle<SplineOMPTargetMultiWalkerMem<ST, ComplexT>> mw_mem_handle_;
 
-  ///team private ratios for reduction, numVP x numTeams
+  /// team private ratios for reduction, numVP x numTeams
   Matrix<ComplexT, OffloadPinnedAllocator<ComplexT>> ratios_private;
-  ///offload scratch space, dynamically resized to the maximal need
+  /// offload scratch space, dynamically resized to the maximal need
   Vector<ST, OffloadPinnedAllocator<ST>> offload_scratch;
-  ///result scratch space, dynamically resized to the maximal need
+  /// result scratch space, dynamically resized to the maximal need
   Vector<ComplexT, OffloadPinnedAllocator<ComplexT>> results_scratch;
-  ///psiinv and position scratch space, used to avoid allocation on the fly and faster transfer
+  /// psiinv and position scratch space, used to avoid allocation on the fly
+  /// and faster transfer
   Vector<ComplexT, OffloadPinnedAllocator<ComplexT>> psiinv_pos_copy;
-  ///position scratch space, used to avoid allocation on the fly and faster transfer
+  /// position scratch space, used to avoid allocation on the fly and faster
+  /// transfer
   Vector<ST, OffloadPinnedAllocator<ST>> multi_pos_copy;
 
   void evaluateVGLMultiPos(const Vector<ST, OffloadPinnedAllocator<ST>>& multi_pos_copy,
@@ -118,15 +120,15 @@ protected:
 
 public:
   SplineC2COMPTargetT(const std::string& my_name)
-      : BsplineSetT<ComplexT>(my_name),
-        offload_timer_(createGlobalTimer("SplineC2COMPTargetT::offload", timer_level_fine)),
+      : BsplineSetT<VT>(my_name),
+        offload_timer_(createGlobalTimer("SplineC2COMPTarget::offload", timer_level_fine)),
         GGt_offload(std::make_shared<OffloadVector<ST>>(9)),
         PrimLattice_G_offload(std::make_shared<OffloadVector<ST>>(9))
   {}
 
   SplineC2COMPTargetT(const SplineC2COMPTargetT& in);
 
-  virtual std::string getClassName() const override { return "SplineC2COMPTargetT"; }
+  virtual std::string getClassName() const override { return "SplineC2COMPTarget"; }
   virtual std::string getKeyword() const override { return "SplineC2C"; }
   bool isComplex() const override { return true; };
   virtual bool isOMPoffload() const override { return true; }
@@ -136,25 +138,25 @@ public:
     auto resource_index = collection.addResource(std::make_unique<SplineOMPTargetMultiWalkerMem<ST, ComplexT>>());
   }
 
-  void acquireResource(ResourceCollection& collection, const RefVectorWithLeader<SPOSet>& spo_list) const override
+  void acquireResource(ResourceCollection& collection, const RefVectorWithLeader<SPOSetT<VT>>& spo_list) const override
   {
     assert(this == &spo_list.getLeader());
-    auto& phi_leader          = spo_list.template getCastedLeader<SplineC2COMPTarget>();
+    auto& phi_leader          = spo_list.template getCastedLeader<SplineC2COMPTargetT>();
     phi_leader.mw_mem_handle_ = collection.lendResource<SplineOMPTargetMultiWalkerMem<ST, ComplexT>>();
   }
 
-  void releaseResource(ResourceCollection& collection, const RefVectorWithLeader<SPOSet>& spo_list) const override
+  void releaseResource(ResourceCollection& collection, const RefVectorWithLeader<SPOSetT<VT>>& spo_list) const override
   {
     assert(this == &spo_list.getLeader());
-    auto& phi_leader = spo_list.template getCastedLeader<SplineC2COMPTarget>();
+    auto& phi_leader = spo_list.template getCastedLeader<SplineC2COMPTargetT>();
     collection.takebackResource(phi_leader.mw_mem_handle_);
   }
 
-  std::unique_ptr<SPOSet> makeClone() const override { return std::make_unique<SplineC2COMPTargetT>(*this); }
+  std::unique_ptr<SPOSetT<VT>> makeClone() const override { return std::make_unique<SplineC2COMPTargetT>(*this); }
 
   inline void resizeStorage(size_t n, size_t nvals)
   {
-    BsplineSetT<ComplexT>::init_base(n);
+    this->init_base(n);
     size_t npad = getAlignedSize<ST>(2 * n);
     myV.resize(npad);
     myG.resize(npad);
@@ -197,7 +199,9 @@ public:
     auto* MultiSpline    = SplineInst->getSplinePtr();
     auto* restrict coefs = MultiSpline->coefs;
     // attach pointers on the device to achieve deep copy
-    PRAGMA_OFFLOAD("omp target map(always, to: MultiSpline[0:1], coefs[0:MultiSpline->coefs_size])")
+    PRAGMA_OFFLOAD("omp target \
+                map(always, to: MultiSpline[0:1], \
+                    coefs[0:MultiSpline->coefs_size])")
     {
       MultiSpline->coefs = coefs;
     }
@@ -241,38 +245,39 @@ public:
 
   void assign_v(const PointType& r, const vContainer_type& myV, ValueVector& psi, int first, int last) const;
 
-  virtual void evaluateValue(const ParticleSetT<ComplexT>& P, const int iat, ValueVector& psi) override;
+  virtual void evaluateValue(const ParticleSetT<VT>& P, const int iat, ValueVector& psi) override;
 
-  virtual void evaluateDetRatios(const VirtualParticleSetT<ComplexT>& VP,
+  virtual void evaluateDetRatios(const VirtualParticleSetT<VT>& VP,
                                  ValueVector& psi,
                                  const ValueVector& psiinv,
                                  std::vector<ValueType>& ratios) override;
 
-  virtual void mw_evaluateDetRatios(const RefVectorWithLeader<SPOSet>& spo_list,
-                                    const RefVectorWithLeader<const VirtualParticleSetT<ComplexT>>& vp_list,
+  virtual void mw_evaluateDetRatios(const RefVectorWithLeader<SPOSetT<VT>>& spo_list,
+                                    const RefVectorWithLeader<const VirtualParticleSetT<VT>>& vp_list,
                                     const RefVector<ValueVector>& psi_list,
                                     const std::vector<const ValueType*>& invRow_ptr_list,
                                     std::vector<std::vector<ValueType>>& ratios_list) const override;
 
-  /** assign_vgl_from_l can be used when myL is precomputed and myV,myG,myL in cartesian
-   */
+  /** assign_vgl_from_l can be used when myL is precomputed and myV,myG,myL in
+     * cartesian
+     */
   void assign_vgl_from_l(const PointType& r, ValueVector& psi, GradVector& dpsi, ValueVector& d2psi);
 
-  virtual void evaluateVGL(const ParticleSetT<ComplexT>& P,
+  virtual void evaluateVGL(const ParticleSetT<VT>& P,
                            const int iat,
                            ValueVector& psi,
                            GradVector& dpsi,
                            ValueVector& d2psi) override;
 
-  virtual void mw_evaluateVGL(const RefVectorWithLeader<SPOSet>& sa_list,
-                              const RefVectorWithLeader<ParticleSetT<ComplexT>>& P_list,
+  virtual void mw_evaluateVGL(const RefVectorWithLeader<SPOSetT<VT>>& sa_list,
+                              const RefVectorWithLeader<ParticleSetT<VT>>& P_list,
                               int iat,
                               const RefVector<ValueVector>& psi_v_list,
                               const RefVector<GradVector>& dpsi_v_list,
                               const RefVector<ValueVector>& d2psi_v_list) const override;
 
-  virtual void mw_evaluateVGLandDetRatioGrads(const RefVectorWithLeader<SPOSet>& spo_list,
-                                              const RefVectorWithLeader<ParticleSetT<ComplexT>>& P_list,
+  virtual void mw_evaluateVGLandDetRatioGrads(const RefVectorWithLeader<SPOSetT<VT>>& spo_list,
+                                              const RefVectorWithLeader<ParticleSetT<VT>>& P_list,
                                               int iat,
                                               const std::vector<const ValueType*>& invRow_ptr_list,
                                               OffloadMWVGLArray& phi_vgl_v,
@@ -286,7 +291,7 @@ public:
                   int first,
                   int last) const;
 
-  virtual void evaluateVGH(const ParticleSetT<ComplexT>& P,
+  virtual void evaluateVGH(const ParticleSetT<VT>& P,
                            const int iat,
                            ValueVector& psi,
                            GradVector& dpsi,
@@ -300,14 +305,14 @@ public:
                     int first = 0,
                     int last  = -1) const;
 
-  virtual void evaluateVGHGH(const ParticleSetT<ComplexT>& P,
+  virtual void evaluateVGHGH(const ParticleSetT<VT>& P,
                              const int iat,
                              ValueVector& psi,
                              GradVector& dpsi,
                              HessVector& grad_grad_psi,
                              GGGVector& grad_grad_grad_psi) override;
 
-  virtual void evaluate_notranspose(const ParticleSetT<ComplexT>& P,
+  virtual void evaluate_notranspose(const ParticleSetT<VT>& P,
                                     int first,
                                     int last,
                                     ValueMatrix& logdet,
@@ -315,10 +320,10 @@ public:
                                     ValueMatrix& d2logdet) override;
 
   template<class BSPLINESPO>
-  friend struct SplineSetReader;
-  friend struct BsplineReaderBase;
+  friend class SplineSetReaderT;
+  template<typename>
+  friend class BsplineReaderBaseT;
 };
-
 
 } // namespace qmcplusplus
 #endif
