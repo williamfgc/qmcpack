@@ -47,6 +47,7 @@ public:
   using GGGVector         = typename SPOSetT<T>::GGGVector;
   using GGGMatrix         = typename SPOSetT<T>::GGGMatrix;
   using OffloadMWVGLArray = typename SPOSetT<T>::OffloadMWVGLArray;
+  using OffloadMWVArray   = typename SPOSetT<T>::OffloadMWVArray;
   template<typename DT>
   using OffloadMatrix = Matrix<DT, OffloadPinnedAllocator<DT>>;
 
@@ -465,13 +466,17 @@ private:
   /// Full set of rotation matrix parameters for use in global rotation method
   OptVariablesTypeT<T> myVarsFull;
 
+  /// timer for apply_rotation
+  NewTimer& apply_rotation_timer_;
+
   /// List of previously applied parameters
   std::vector<std::vector<RealType>> history_params_;
+
+  static RefVectorWithLeader<SPOSetT<T>> extractPhiRefList(const RefVectorWithLeader<SPOSetT<T>>& spo_list);
 
   /// Use global rotation or history list
   bool use_global_rot_ = true;
 
-  static RefVectorWithLeader<SPOSetT<T>> extractPhiRefList(const RefVectorWithLeader<SPOSetT<T>>& spo_list);
   friend OptVariablesTypeT<double>& testing::getMyVarsFull(RotatedSPOsT<double>& rot);
   friend OptVariablesTypeT<float>& testing::getMyVarsFull(RotatedSPOsT<float>& rot);
   friend std::vector<std::vector<double>>& testing::getHistoryParams(RotatedSPOsT<double>& rot);
